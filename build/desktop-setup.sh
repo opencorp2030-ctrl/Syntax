@@ -127,6 +127,20 @@ for f in /etc/xdg/autostart/nm-applet.desktop /etc/xdg/autostart/blueman.desktop
     [ -f "$f" ] && { grep -q '^Hidden=' "$f" || echo 'Hidden=true' >> "$f"; }
 done
 
+step "Interface : lanceur sans entrées techniques ou en double"
+apt-get -s purge rp-bookshelf 2>/dev/null | grep -c '^Purg' | { read -r n; [ "${n:-9}" -le 2 ] && apt-get purge -y rp-bookshelf >/dev/null 2>&1 || true; }
+mkdir -p /usr/local/share/applications
+for app in userguide gui-runcmd wf-panel-pi openbox org.freedesktop.Xwayland notification-daemon \
+           lxsession-logout pishutdown lxterminal foot-server footclient; do
+    [ -f "/usr/share/applications/$app.desktop" ] || continue
+    printf '[Desktop Entry]\nType=Application\nName=%s\nNoDisplay=true\n' "$app" > "/usr/local/share/applications/$app.desktop"
+done
+if [ -f /usr/share/applications/foot.desktop ]; then
+    sed 's/^Name=.*/Name=Terminal/; /^Name\[/d; s/^GenericName=.*/GenericName=Terminal/' /usr/share/applications/foot.desktop \
+        > /usr/local/share/applications/foot.desktop
+fi
+ls /usr/share/applications | tr '\n' ' '; echo
+
 step "Interface : bureau et écran de connexion"
 for f in /etc/xdg/pcmanfm/default/desktop-items-*.conf; do
     [ -f "$f" ] || continue

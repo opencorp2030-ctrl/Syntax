@@ -6,7 +6,8 @@ navigateur, sur ton réseau local ou depuis Internet via ton propre domaine Clou
 
 - **Compatible** : Raspberry Pi 5 (cible principale), Pi 4, Pi 400, Zero 2 W — noyau, firmware et
   pilotes officiels Raspberry Pi.
-- **Bureau complet** Wayland (labwc), en français, clavier AZERTY, fuseau Europe/Paris.
+- **Interface Syntax** : dock vertical à droite de l'écran, lanceur d'applications (touche Super
+  ou logo du dock), thème sombre, terminal assorti ; en français, clavier AZERTY, fuseau Europe/Paris.
 - **Outils préinstallés** : Git, Python (venv, pip, pipx), Node.js + npm, Docker, VS Code,
   GitHub CLI, Claude Code (`claude`), cloudflared.
 - **Sans écran ni clavier** : flashe, branche, ouvre `http://syntax.local`.
@@ -118,7 +119,9 @@ L'image est écrite dans `out/`.
 | `system/libexec/` | Partage d'écran, lancement du tunnel, choix du compte au premier démarrage |
 | `rootfs/` | Fichiers copiés tels quels dans l'image (services systemd, PAM, lanceurs) |
 | `boot/syntax.conf` | Modèle de configuration déposé sur la partition de démarrage |
+| `desktop/` | Interface : dock, lanceur, thème des fenêtres, terminal, notifications |
 | `branding/` | Fond d'écran et écran de démarrage |
+| `ci/` | Capture du bureau de l'image dans un compositeur sans écran |
 | `build/` | Scripts de construction de l'image |
 
 ## Licences
