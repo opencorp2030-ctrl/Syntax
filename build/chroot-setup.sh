@@ -145,7 +145,7 @@ if [ -f "$PANEL" ]; then
     sed -i -E '/^widgets_right=/ s/ ?\bconnect\b( spacing[0-9]+)?//' "$PANEL"
     LAUNCH="x-www-browser pcmanfm x-terminal-emulator"
     ls /usr/share/applications | grep -i code || true
-    CODE_DESKTOP="$(ls /usr/share/applications/code*.desktop 2>/dev/null | grep -v url-handler | head -1 || true)"
+    CODE_DESKTOP="$(ls /usr/share/applications/*.desktop 2>/dev/null | grep -iE '/(code|com\.microsoft\.VSCode)\.desktop$' | head -1 || true)"
     [ -n "$CODE_DESKTOP" ] && LAUNCH="$LAUNCH $(basename "$CODE_DESKTOP" .desktop)"
     sed -i "s|^launchers=.*|launchers=$LAUNCH syntax-connect|" "$PANEL"
     cat "$PANEL"
@@ -173,29 +173,9 @@ systemctl disable syntax-tunnel.service 2>/dev/null || true
 systemctl disable cloudflared.service 2>/dev/null || true
 systemd-analyze verify /etc/systemd/system/syntax-*.service 2>&1 | grep -i syntax || true
 
-step "Écran de démarrage dans l'initramfs"
-# L'initramfs d'origine est conservé si la régénération (faite hors d'un vrai Pi) en modifie
-# le contenu au-delà de l'écran de démarrage : le démarrage du Pi passe avant l'habillage.
-grep -rh '^MODULES' /etc/initramfs-tools/ 2>/dev/null || true
-mkdir -p /var/tmp/initramfs-orig
-cp -a /boot/firmware/initramfs* /var/tmp/initramfs-orig/
-if update-initramfs -u -k all; then
-    for f in /var/tmp/initramfs-orig/initramfs*; do
-        n="$(basename "$f")"
-        lsinitramfs "$f" | grep -v 'splash\|plymouth' | sort > /var/tmp/old.lst
-        lsinitramfs "/boot/firmware/$n" | grep -v 'splash\|plymouth' | sort > /var/tmp/new.lst
-        echo "$n : $(wc -l < /var/tmp/old.lst) fichiers avant, $(wc -l < /var/tmp/new.lst) après"
-        if ! diff -q /var/tmp/old.lst /var/tmp/new.lst >/dev/null; then
-            diff /var/tmp/old.lst /var/tmp/new.lst | head -40 || true
-            warn "$n : contenu différent, initramfs d'origine restauré"
-            cp -a "$f" "/boot/firmware/$n"
-        fi
-    done
-else
-    warn "update-initramfs a échoué, initramfs d'origine restaurés"
-    cp -a /var/tmp/initramfs-orig/initramfs* /boot/firmware/
-fi
-rm -rf /var/tmp/initramfs-orig /var/tmp/old.lst /var/tmp/new.lst
+# L'initramfs n'est volontairement pas régénéré ici : hors d'un vrai Pi (MODULES=dep), il perd
+# des pilotes et des firmwares. Le nouvel écran de démarrage y entrera à la prochaine mise à jour
+# du noyau faite sur le Pi ; d'ici là, l'écran de démarrage d'origine s'affiche.
 
 step "Auto-tests dans l'image"
 python3 -c "import aiohttp; print('aiohttp', aiohttp.__version__)"
