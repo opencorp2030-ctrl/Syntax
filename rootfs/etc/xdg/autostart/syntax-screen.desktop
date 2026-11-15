@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name=Syntax Connect — partage d'écran
+Exec=/usr/lib/syntax/libexec/screen-share
+NoDisplay=true

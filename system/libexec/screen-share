@@ -1,0 +1,28 @@
+#!/bin/sh
+# Partage l'écran de la session Wayland vers Syntax Connect, via une socket Unix
+# privée (aucun port réseau ouvert : seul le portail, après connexion, y accède).
+[ -n "$WAYLAND_DISPLAY" ] && [ -n "$XDG_RUNTIME_DIR" ] || exit 0
+[ "$(id -u)" -ge 1000 ] || exit 0
+command -v wayvnc >/dev/null || exit 0
+
+if [ -z "$SYNTAX_SCREEN_BG" ]; then
+    SYNTAX_SCREEN_BG=1 setsid -f "$0" >/dev/null 2>&1
+    exit 0
+fi
+
+exec 9>"$XDG_RUNTIME_DIR/syntax-screen.lock"
+flock -n 9 || exit 0
+umask 077
+SOCK="$XDG_RUNTIME_DIR/syntax-screen.sock"
+[ -r /etc/default/keyboard ] && . /etc/default/keyboard
+export XKB_DEFAULT_MODEL="${XKBMODEL:-pc105}" XKB_DEFAULT_LAYOUT="${XKBLAYOUT:-fr}"
+[ -n "$XKBVARIANT" ] && export XKB_DEFAULT_VARIANT="$XKBVARIANT"
+
+while [ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]; do
+    rm -f "$SOCK"
+    wayvnc --config /etc/syntax/wayvnc.conf --render-cursor \
+        --socket "$XDG_RUNTIME_DIR/syntax-wayvncctl.sock" \
+        --unix-socket "$SOCK" 9>&-
+    sleep 3
+done
+rm -f "$SOCK"

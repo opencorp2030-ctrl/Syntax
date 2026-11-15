@@ -1,0 +1,10 @@
+#!/bin/sh
+# Si l'utilisateur a été défini par Raspberry Pi Imager (cloud-init), on n'applique
+# pas le compte d'usine « syntax ».
+FW=/boot/firmware
+[ -f "$FW/userconf.txt" ] || exit 0
+FIRST="$(getent passwd 1000 | cut -d: -f1)"
+if [ "$FIRST" != "pi" ] || grep -qE '^[[:space:]]*(users|user|chpasswd|password):' "$FW/user-data" 2>/dev/null; then
+    rm -f "$FW/userconf.txt"
+fi
+exit 0
