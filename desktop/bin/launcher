@@ -1,4 +1,5 @@
 #!/bin/sh
 # Lanceur d'applications (touche Super ou logo du dock). Un second appel le referme.
 pkill -x fuzzel && exit 0
+mkdir -p "${XDG_CACHE_HOME:-$HOME/.cache}"
 exec fuzzel --config=/usr/share/syntax/desktop/fuzzel.ini "$@"
