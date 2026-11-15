@@ -75,4 +75,4 @@ jobs:
           fi
           gh release delete "$TAG" --cleanup-tag -y -R "$GITHUB_REPOSITORY" 2>/dev/null || true
           gh release create "$TAG" "${FILES[@]}" -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-            --title "Syntax OS $VERSION" --notes-file ../build/RELEASE_NOTES.md
+            --title "Syntax OS $VERSION" --notes-file "$GITHUB_WORKSPACE/build/RELEASE_NOTES.md"
