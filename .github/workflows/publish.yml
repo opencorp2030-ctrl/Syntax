@@ -15,7 +15,7 @@ permissions:
   actions: read
 
 env:
-  DEFAULT_RUN_ID: '43766575677'
+  DEFAULT_RUN_ID: '43775664167'
 
 jobs:
   publish:
@@ -37,5 +37,6 @@ jobs:
           sha256sum -c syntax-os-*.img.xz.sha256
           TAG="v$(cat ../VERSION)"
           gh release delete "$TAG" --cleanup-tag -y -R "$GITHUB_REPOSITORY" 2>/dev/null || true
-          gh release create "$TAG" syntax-os-*.img.xz syntax-os-*.img.xz.sha256 -R "$GITHUB_REPOSITORY" \
+          SHOTS=(); for f in bureau*.png; do [ -f "$f" ] && SHOTS+=("$f"); done
+          gh release create "$TAG" syntax-os-*.img.xz syntax-os-*.img.xz.sha256 "${SHOTS[@]}" -R "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" --title "Syntax OS $(cat ../VERSION)" --notes-file ../build/RELEASE_NOTES.md
