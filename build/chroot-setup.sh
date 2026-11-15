@@ -68,8 +68,6 @@ chmod 755 /usr/lib/syntax/cli.py /usr/lib/syntax/portal/server.py /usr/lib/synta
 chmod 750 /etc/syntax
 ln -sf /usr/lib/syntax/cli.py /usr/bin/syntax
 echo "$VERSION" > /usr/lib/syntax/version
-cp "$B/wallpaper.png" /usr/share/syntax/wallpaper.png
-cp "$B/logo.png" /usr/share/syntax/logo.png
 python3 -m compileall -q /usr/lib/syntax
 
 step "Compte d'usine (remplacé obligatoirement à la première connexion au portail)"
@@ -132,30 +130,7 @@ if [ -f /etc/xdg/labwc/environment ]; then
     fi
 fi
 
-step "Bureau : apparence Syntax"
-for f in /etc/xdg/pcmanfm/default/desktop-items-*.conf; do
-    [ -f "$f" ] && sed -i 's|^wallpaper=.*|wallpaper=/usr/share/syntax/wallpaper.png|; s|^wallpaper_mode=.*|wallpaper_mode=crop|' "$f"
-done
-grep -H '^wallpaper' /etc/xdg/pcmanfm/default/desktop-items-*.conf || true
-if [ -f /etc/xdg/labwc/rc.xml ]; then
-    sed -i 's|<cornerRadius>0</cornerRadius>|<cornerRadius>10</cornerRadius>|; s|<name>Nunito Sans</name>|<name>Inter</name>|g; s|<weight>Light</weight>|<weight>Normal</weight>|g' /etc/xdg/labwc/rc.xml
-fi
-PANEL=/etc/xdg/wf-panel-pi/wf-panel-pi.ini
-if [ -f "$PANEL" ]; then
-    sed -i -E '/^widgets_right=/ s/ ?\bconnect\b( spacing[0-9]+)?//' "$PANEL"
-    LAUNCH="x-www-browser pcmanfm x-terminal-emulator"
-    ls /usr/share/applications | grep -i code || true
-    CODE_DESKTOP="$(ls /usr/share/applications/*.desktop 2>/dev/null | grep -iE '/(code|com\.microsoft\.VSCode)\.desktop$' | head -1 || true)"
-    [ -n "$CODE_DESKTOP" ] && LAUNCH="$LAUNCH $(basename "$CODE_DESKTOP" .desktop)"
-    sed -i "s|^launchers=.*|launchers=$LAUNCH syntax-connect|" "$PANEL"
-    cat "$PANEL"
-fi
-if [ -f /usr/share/plymouth/themes/pix/splash.png ]; then
-    dpkg-divert --quiet --add --rename --divert /usr/share/plymouth/themes/pix/splash.png.rpi \
-        /usr/share/plymouth/themes/pix/splash.png
-    cp "$B/splash.png" /usr/share/plymouth/themes/pix/splash.png
-fi
-gtk-update-icon-cache -q -f /usr/share/icons/hicolor 2>/dev/null || true
+B="$B" bash "$B/desktop-setup.sh"
 
 step "Raspberry Pi Connect remplacé par Syntax Connect"
 REMOVED="$(apt-get -s purge rpi-connect rpi-connect-lite 2>/dev/null | grep -c '^Purg' || true)"

@@ -1,0 +1,7 @@
+#!/bin/sh
+# Services de la session graphique Syntax : notifications, réseau, Bluetooth.
+start_once() { pgrep -u "$(id -u)" -x "$1" >/dev/null || "$@" >/dev/null 2>&1 & }
+start_once mako -c /usr/share/syntax/desktop/mako.conf
+( sleep 2
+  pgrep -u "$(id -u)" -x nm-applet >/dev/null || nm-applet --indicator >/dev/null 2>&1 &
+  pgrep -u "$(id -u)" -f blueman-applet >/dev/null || blueman-applet >/dev/null 2>&1 & ) &

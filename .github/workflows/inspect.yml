@@ -1,52 +1,46 @@
-name: inspect-base
+name: desktop-test
+# Installe l'interface Syntax sur l'image de base et capture le bureau (rendu sans écran).
 on:
   push:
     branches: ['claude/**']
-    paths: ['.github/workflows/inspect.yml', 'ci/**']
+    paths: ['.github/workflows/inspect.yml', 'ci/**', 'desktop/**', 'build/desktop-setup.sh', 'build/make-assets.sh', 'branding/**']
   workflow_dispatch:
 jobs:
-  inspect:
+  shot:
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
-      - name: Download base
+      - name: Base
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick >/dev/null
+          sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick librsvg2-bin fonts-inter >/dev/null
           curl -fsSL -o base.img.xz https://downloads.raspberrypi.com/raspios_arm64_latest
-          xz -d base.img.xz; truncate -s +2G base.img; sudo parted -s base.img resizepart 2 100%
-      - name: Inspect
+          xz -d base.img.xz; truncate -s +3G base.img; sudo parted -s base.img resizepart 2 100%
+      - name: Interface + captures
         run: |
           LOOP=$(sudo losetup -fP --show base.img); sleep 1
           sudo e2fsck -fy ${LOOP}p2 >/dev/null || true; sudo resize2fs ${LOOP}p2 >/dev/null
           R=/mnt/r; sudo mkdir -p $R && sudo mount ${LOOP}p2 $R && sudo mount ${LOOP}p1 $R/boot/firmware
-          sudo mount -t proc proc $R/proc; sudo mount -t sysfs sys $R/sys; sudo mount --bind /dev $R/dev; sudo mount --bind /dev/pts $R/dev/pts; sudo mount -t tmpfs tmpfs $R/run
-          sudo cp /etc/resolv.conf $R/etc/resolv.conf.new && sudo mv $R/etc/resolv.conf.new $R/etc/resolv.conf || true
+          sudo mount -t proc proc $R/proc; sudo mount -t sysfs sys $R/sys; sudo mount --bind /dev $R/dev; sudo mount --bind /dev/pts $R/dev/pts
+          sudo mount -t tmpfs tmpfs $R/dev/shm; sudo mount -t tmpfs tmpfs $R/run
+          sudo rm -f $R/etc/resolv.conf; sudo cp /etc/resolv.conf $R/etc/resolv.conf
+          sudo build/make-assets.sh "$PWD" "$PWD/stage"
+          sudo mkdir -p $R/tmp/syntax-build && sudo mount --bind "$PWD/stage" $R/tmp/syntax-build
           sudo cp ci/headless-shot.sh $R/tmp/
           C() { sudo chroot $R /usr/bin/env -i HOME=/root PATH=/usr/sbin:/usr/bin:/sbin:/bin DEBIAN_FRONTEND=noninteractive "$@"; }
+          printf '#!/bin/sh\nexit 101\n' | sudo tee $R/usr/sbin/policy-rc.d >/dev/null; sudo chmod +x $R/usr/sbin/policy-rc.d
+          C apt-get update -qq
+          C bash /tmp/syntax-build/desktop-setup.sh 2>&1 | grep -v '^Get:\|^Selecting\|^Preparing\|^Unpacking\|^Setting up\|Reading database'
           set +e
-          echo "=== PLYMOUTH"; cat $R/usr/share/plymouth/themes/pix/pix.script $R/usr/share/plymouth/themes/pix/pix.plymouth; file $R/usr/share/plymouth/themes/pix/splash.png
-          cat $R/etc/plymouth/plymouthd.conf $R/usr/share/plymouth/plymouthd.defaults
-          echo "=== LABWC"; cat $R/usr/bin/labwc-pi; cat $R/etc/xdg/labwc/environment $R/etc/xdg/labwc/autostart $R/etc/xdg/labwc/menu.xml; sed -n 80,200p $R/etc/xdg/labwc/rc.xml
-          ls -R $R/usr/share/themes/PiXtrix $R/usr/share/themes/PiXonyx | head -80
-          cat $R/usr/share/themes/PiXonyx/labwc/themerc 2>/dev/null | head -60
-          echo "=== PANEL"; C dpkg -L wf-panel-pi wfplug-menu | grep -v '/locale/\|/doc/'; ls $R/usr/share/wf-panel-pi/images $R/usr/share/wf-panel-pi/ui
-          strings $R/usr/bin/wf-panel-pi | grep -i -E 'position|monitor|icon_size|autohide|/panel/' | head -40
-          for f in $R/usr/lib/aarch64-linux-gnu/wf-panel-pi/*.so; do echo "-- $f"; strings $f | grep -i -E 'start-here|rpi-logo|raspberry|icon' | head -8; done
-          echo "=== ICONS"; find $R/usr/share/icons $R/usr/share/pixmaps $R/usr/share/raspberrypi-artwork $R/usr/share/rpd-* -iname '*rpi*' -o -iname '*raspberry*' -o -iname 'start-here*' -o -iname 'distributor*' -o -iname '*pi-logo*' 2>/dev/null | head -80
-          cat $R/usr/share/icons/PiXtrix/index.theme | head -30
-          echo "=== GSETTINGS"; ls $R/usr/share/glib-2.0/schemas | grep -v -E '^org\.(gnome|gtk|freedesktop)'; cat $R/usr/share/glib-2.0/schemas/*.gschema.override
-          cat $R/etc/gtk-3.0/settings.ini $R/etc/xdg/gtk-3.0/settings.ini 2>/dev/null; ls $R/etc/dconf $R/etc/dconf/db 2>/dev/null
-          ls -la $R/etc/xdg/lxsession/*; cat $R/etc/xdg/lxsession/*/desktop.conf
-          cat $R/etc/xdg/pcmanfm/default/pcmanfm.conf $R/etc/xdg/pcmanfm/default/desktop-items-0.conf
-          echo "=== GREETER"; cat $R/etc/lightdm/pi-greeter.conf; cat $R/etc/xdg/labwc-greeter/rc.xml | head -40; cat $R/etc/xdg/labwc-greeter/environment; cat $R/usr/share/dispsetup.sh
-          echo "=== APPS"; grep -il 'raspberry' $R/usr/share/applications/*.desktop; grep -h '^Name=\|^Name\[fr\]=\|^Icon=\|^Exec=' $R/usr/share/applications/{rc_gui,pipanel,rp-prefapps,rp-bookshelf,raspi-imager,lxterminal,pcmanfm,chromium,firefox}*.desktop 2>/dev/null
-          ls $R/usr/share/applications | tr '\n' ' '
-          C dpkg -l | awk '{print $2}' | grep -i -E 'pix|theme|icon|pipanel|rasputin|term|foot|kanshi|wlr|grim|swaybg|mako|waybar|fuzzel|wofi|blueman|network-manager|pavucontrol|pishutdown|squeek|gtk-layer|cursor' | tr '\n' ' '
-          echo; echo "=== AVAIL"; C apt-get update -qq
-          C apt-cache policy waybar fuzzel wofi mako-notifier grim slurp wlr-randr swaybg network-manager-applet blueman pavucontrol wlogout papirus-icon-theme fonts-font-awesome fonts-symbola-nerd fonts-jetbrains-mono foot swayidle swaylock gtklock nwg-look nwg-drawer sfwbar wl-clipboard playerctl brightnessctl wtype | grep -E '^[a-z]|Candidate'
-          echo "=== CONFIG.TXT tail"; tail -5 $R/boot/firmware/config.txt
-          echo "=== SHOT"
-          C apt-get install -y -qq --no-install-recommends grim wlr-randr >/dev/null 2>&1
-          C bash /tmp/headless-shot.sh pi /tmp/shot.png 25
-          sudo cp $R/tmp/shot.png shot.png && convert shot.png -resize 1280x -quality 72 shot.jpg && ls -l shot.jpg
-          echo "B64BEGIN"; base64 -w0 shot.jpg; echo; echo "B64END"
+          echo "=== setup_env"; cat $R/usr/bin/setup_env
+          HOOK='/usr/share/syntax/desktop/bin/launcher & sleep 4; grim /tmp/shot2.png; pkill -x fuzzel; pcmanfm >/dev/null 2>&1 & sleep 2; lxterminal >/dev/null 2>&1 & sleep 7; grim /tmp/shot3.png; pgrep -a -u $(id -u) . | cut -c1-120'
+          C env SHOT_HOOK="$HOOK" bash /tmp/headless-shot.sh pi /tmp/shot.png 22
+          for n in shot shot2 shot3; do
+            sudo cp $R/tmp/$n.png $n.png && convert $n.png -resize 1280x -quality 70 $n.jpg && { echo "B64 $n"; base64 -w0 $n.jpg; echo; }
+          done
+          echo "=== fin"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: captures
+          path: '*.png'
+          retention-days: 7

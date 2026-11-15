@@ -1,0 +1,3 @@
+#!/bin/sh
+# Dock vertical de Syntax OS (bord droit de l'écran).
+exec waybar -c /usr/share/syntax/desktop/waybar.json -s /usr/share/syntax/desktop/waybar.css

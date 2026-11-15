@@ -23,7 +23,7 @@ done
 step() { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
 
 unmount_all() {
-    for d in dev/pts dev proc sys run tmp/syntax-build boot/firmware ""; do
+    for d in dev/shm dev/pts dev proc sys run tmp/syntax-build boot/firmware ""; do
         mountpoint -q "$MNT/$d" && umount -R "$MNT/$d" || true
     done
 }
@@ -67,17 +67,10 @@ losetup -d "$LOOP"; LOOP=""
 
 step "Montage"
 mount_image
-SPLASH_SIZE="$(file "$MNT/usr/share/plymouth/themes/pix/splash.png" | grep -oE '[0-9]+ x [0-9]+' | head -1 || true)"
-SPLASH_W="${SPLASH_SIZE%% x *}"; SPLASH_H="${SPLASH_SIZE##* x }"
-echo "Écran de démarrage d'origine : ${SPLASH_SIZE:-inconnu}"
-
 step "Préparation des fichiers Syntax OS"
 STAGE="$WORK/stage"
 rm -rf "$STAGE"; mkdir -p "$STAGE"
-cp -a "$REPO/system" "$REPO/rootfs" "$REPO/boot" "$REPO/build/chroot-setup.sh" "$STAGE/"
-rsvg-convert -w 3840 -h 2160 "$REPO/branding/wallpaper.svg" -o "$STAGE/wallpaper.png"
-rsvg-convert -w "${SPLASH_W:-1920}" -h "${SPLASH_H:-1080}" -b black "$REPO/branding/splash.svg" -o "$STAGE/splash.png"
-rsvg-convert -w 256 -h 256 "$REPO/system/portal/static/logo.svg" -o "$STAGE/logo.png"
+"$REPO/build/make-assets.sh" "$REPO" "$STAGE"
 echo "$VERSION" > "$STAGE/version"
 
 step "Personnalisation dans le chroot"
@@ -87,6 +80,7 @@ mount -t proc proc "$MNT/proc"
 mount -t sysfs sys "$MNT/sys"
 mount --bind /dev "$MNT/dev"
 mount --bind /dev/pts "$MNT/dev/pts"
+mount -t tmpfs tmpfs "$MNT/dev/shm"
 mount -t tmpfs tmpfs "$MNT/run"
 mv "$MNT/etc/resolv.conf" "$MNT/etc/resolv.conf.syntax-orig" 2>/dev/null || true
 cat /etc/resolv.conf > "$MNT/etc/resolv.conf"
@@ -102,6 +96,12 @@ cp "$STAGE/boot/syntax.conf" "$MNT/boot/firmware/syntax.conf"
 cp "$MNT/usr/lib/syntax/userconf.txt" "$MNT/boot/firmware/userconf.txt"
 rm -f "$MNT/usr/lib/syntax/userconf.txt"
 printf 'Syntax OS %s\n' "$VERSION" > "$MNT/boot/firmware/issue.txt"
+CMD="$(tr -d '\n' < "$MNT/boot/firmware/cmdline.txt")"
+for arg in logo.nologo vt.global_cursor_default=0; do
+    case " $CMD " in *" $arg "*) ;; *) CMD="$CMD $arg" ;; esac
+done
+echo "$CMD" > "$MNT/boot/firmware/cmdline.txt"
+grep -q '^disable_splash=1' "$MNT/boot/firmware/config.txt" || printf '\n# Syntax OS : pas d\'écran arc-en-ciel au démarrage\ndisable_splash=1\n' >> "$MNT/boot/firmware/config.txt"
 cat "$MNT/boot/firmware/cmdline.txt"
 ls -la "$MNT/boot/firmware" | grep -E 'initramfs|kernel|syntax|userconf|cmdline'
 df -h "$MNT" "$MNT/boot/firmware"
