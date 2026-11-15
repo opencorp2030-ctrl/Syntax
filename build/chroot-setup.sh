@@ -39,8 +39,7 @@ install_cloudflared() {
         if curl -fsSL "https://pkg.cloudflare.com/$key" -o /usr/share/keyrings/cloudflare.gpg; then
             echo "deb [signed-by=/usr/share/keyrings/cloudflare.gpg] https://pkg.cloudflare.com/cloudflared any main" \
                 > /etc/apt/sources.list.d/cloudflared.list
-            if apt-get update -o Dir::Etc::sourcelist=/etc/apt/sources.list.d/cloudflared.list \
-                    -o Dir::Etc::sourceparts=- && apt-get install -y cloudflared; then
+            if apt-get update && apt-get install -y cloudflared; then
                 return 0
             fi
         fi

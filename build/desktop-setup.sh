@@ -8,6 +8,7 @@ step() { printf '\n\033[1;36m--> %s\033[0m\n' "$*"; }
 warn() { printf '\033[1;33mAVERTISSEMENT : %s\033[0m\n' "$*"; }
 
 step "Interface : paquets"
+apt-get update
 apt-get install -y --no-install-recommends \
     waybar fuzzel mako-notifier fonts-inter fonts-font-awesome papirus-icon-theme \
     network-manager-applet blueman pavucontrol swaybg wl-clipboard grim slurp wlr-randr \
