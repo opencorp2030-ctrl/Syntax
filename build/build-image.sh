@@ -101,7 +101,7 @@ for arg in logo.nologo vt.global_cursor_default=0; do
     case " $CMD " in *" $arg "*) ;; *) CMD="$CMD $arg" ;; esac
 done
 echo "$CMD" > "$MNT/boot/firmware/cmdline.txt"
-grep -q '^disable_splash=1' "$MNT/boot/firmware/config.txt" || printf '\n# Syntax OS : pas d\'écran arc-en-ciel au démarrage\ndisable_splash=1\n' >> "$MNT/boot/firmware/config.txt"
+grep -q '^disable_splash=1' "$MNT/boot/firmware/config.txt" || printf '\n# Syntax OS : pas d ecran arc-en-ciel au demarrage\ndisable_splash=1\n' >> "$MNT/boot/firmware/config.txt"
 cat "$MNT/boot/firmware/cmdline.txt"
 ls -la "$MNT/boot/firmware" | grep -E 'initramfs|kernel|syntax|userconf|cmdline'
 df -h "$MNT" "$MNT/boot/firmware"
