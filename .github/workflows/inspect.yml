@@ -1,0 +1,46 @@
+name: inspect-base
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/workflows/inspect.yml']
+  workflow_dispatch:
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Download base
+        run: |
+          curl -fsSL -o base.img.xz -w '%{url_effective}\n' https://downloads.raspberrypi.com/raspios_arm64_latest
+          ls -l base.img.xz; xz -d base.img.xz; ls -l base.img; df -h .
+      - name: Inspect
+        run: |
+          set -x
+          sudo sfdisk -d base.img
+          LOOP=$(sudo losetup -fP --show base.img)
+          sudo mkdir -p /mnt/r && sudo mount ${LOOP}p2 /mnt/r && sudo mount ${LOOP}p1 /mnt/r/boot/firmware
+          R=/mnt/r
+          set +e
+          cat $R/etc/os-release; cat $R/etc/rpi-issue
+          ls -la $R/boot/firmware; cat $R/boot/firmware/cmdline.txt; cat $R/boot/firmware/config.txt
+          for f in user-data network-config meta-data; do echo "== $f"; cat $R/boot/firmware/$f; done
+          cat $R/etc/fstab; cat $R/etc/passwd | tail -15; sudo grep -E '^(pi|rpi)' $R/etc/shadow | cut -c1-20
+          ls $R/home; ls -la $R/etc/xdg $R/etc/xdg/autostart $R/etc/xdg/labwc* ; cat $R/etc/xdg/labwc/autostart $R/etc/xdg/labwc-greeter/autostart
+          sudo grep -rn 'wallpaper' $R/etc/xdg $R/usr/share/pcmanfm* 2>/dev/null | head -30
+          ls $R/usr/share/rpd-wallpaper $R/usr/share/plymouth/themes $R/usr/share/plymouth/themes/pix
+          ls $R/usr/lib/userconf-pi; cat $R/usr/lib/userconf-pi/userconf; cat $R/usr/lib/userconf-pi/userconf-service
+          cat $R/usr/lib/systemd/system/userconfig.service
+          ls $R/etc/wayvnc; sudo cat $R/etc/wayvnc/config; cat $R/usr/lib/systemd/system/wayvnc*.service; cat $R/usr/sbin/wayvnc-run.sh
+          ls $R/etc/lightdm; sudo cat $R/etc/lightdm/lightdm.conf | grep -v '^#' | grep .
+          ls $R/usr/share/wayland-sessions $R/usr/share/xsessions; cat $R/usr/share/wayland-sessions/*.desktop
+          ls $R/etc/systemd/system $R/etc/systemd/system/*.wants
+          ls $R/etc/cloud $R/etc/cloud/cloud.cfg.d; cat $R/etc/cloud/cloud.cfg.d/*
+          ls $R/etc/apt/sources.list.d; cat $R/etc/apt/sources.list.d/*
+          sudo chroot $R dpkg -l | grep -E 'wayvnc|novnc|labwc|wf-panel|pcmanfm|piwiz|userconf|cloud-init|rpi-connect|python3-(aiohttp|pam)|nodejs|chromium|firefox|plymouth|raspi-config|pixflat|pishutdown|rpd-|raspberrypi-ui|gui-pkexec|lxsession|greetd|lightdm|fonts-' | awk '{print $2, $3}'
+          sudo chroot $R apt-cache policy code docker.io nodejs npm novnc python3-aiohttp python3-pam cloudflared wayvnc fonts-inter python3-websockets ttyd | grep -E '^[a-z]|Candidate'
+          sudo grep -n 'vnc' -A25 $R/usr/bin/raspi-config | grep -n 'do_vnc()' -A40 | head -80
+          sudo grep -n 'do_vnc_resolution\|video=' $R/usr/bin/raspi-config | head -20
+          cat $R/etc/xdg/labwc/rc.xml | head -80; ls $R/usr/share/themes $R/usr/share/icons
+          ls -la $R/etc/skel $R/etc/skel/.config 2>/dev/null
+          cat $R/etc/motd; cat $R/etc/issue; cat $R/etc/hostname
+          ls $R/usr/share/wf-panel-pi 2>/dev/null; cat $R/etc/xdg/wf-panel-pi/wf-panel-pi.ini $R/etc/xdg/wf-panel-pi.ini 2>/dev/null
+          df -h $R $R/boot/firmware
