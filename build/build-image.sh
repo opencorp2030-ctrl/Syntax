@@ -90,7 +90,7 @@ step "Capture du bureau de l'image (rendu sans écran)"
 cp "$REPO/ci/headless-shot.sh" "$MNT/tmp/headless-shot.sh"
 HOOK='/usr/share/syntax/desktop/bin/launcher & sleep 4; grim /tmp/bureau-lanceur.png; pkill -x fuzzel; sleep 1; pcmanfm >/dev/null 2>&1 & sleep 3; x-terminal-emulator >/dev/null 2>&1 & sleep 7; grim /tmp/bureau-fenetres.png'
 chroot "$MNT" /usr/bin/env -i HOME=/root PATH=/usr/sbin:/usr/bin:/sbin:/bin SHOT_HOOK="$HOOK" /bin/bash -c '
-    useradd -m -s /bin/bash syntaxshot && bash /tmp/headless-shot.sh syntaxshot /tmp/bureau.png 20
+    useradd -u 59123 -m -s /bin/bash syntaxshot && bash /tmp/headless-shot.sh syntaxshot /tmp/bureau.png 20
     pkill -u syntaxshot; sleep 1; userdel -r syntaxshot 2>/dev/null; rm -rf /run/user/* /home/syntaxshot' || echo "capture du bureau impossible"
 cp "$MNT"/tmp/bureau*.png "$OUT/" 2>/dev/null || true
 umount "$MNT/tmp/syntax-build"
