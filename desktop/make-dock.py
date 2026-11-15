@@ -29,7 +29,7 @@ def have(cmd):
 pinned = [
     ("browser", "x-www-browser", icon("chromium", "chromium-browser", "firefox", "web-browser"), "Navigateur"),
     ("files", "pcmanfm", icon("system-file-manager", "org.gnome.Nautilus", "file-manager"), "Fichiers"),
-    ("terminal", "x-terminal-emulator", icon("utilities-terminal", "terminal", "lxterminal"), "Terminal"),
+    ("terminal", "x-terminal-emulator", icon("utilities-terminal", "foot", "terminal"), "Terminal"),
 ]
 if have("code"):
     pinned.append(("code", "code", icon("visual-studio-code", "com.visualstudio.code", "vscode", "code"), "VS Code"))

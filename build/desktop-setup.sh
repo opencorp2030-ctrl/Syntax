@@ -11,7 +11,7 @@ step "Interface : paquets"
 apt-get install -y --no-install-recommends \
     waybar fuzzel mako-notifier fonts-inter fonts-font-awesome papirus-icon-theme \
     network-manager-applet blueman pavucontrol swaybg wl-clipboard grim slurp wlr-randr \
-    libglib2.0-bin cpio
+    libglib2.0-bin cpio foot fonts-jetbrains-mono
 
 step "Interface : fichiers"
 mkdir -p /usr/share/syntax/desktop /usr/share/themes/Syntax
@@ -22,6 +22,9 @@ cp "$B/system/portal/static/logo.svg" /usr/share/syntax/logo.svg
 cp "$B/wallpaper.jpg" /usr/share/syntax/wallpaper.jpg
 cp "$B/logo.png" /usr/share/syntax/logo.png
 chmod 755 /usr/share/syntax/desktop/bin/*
+mkdir -p /etc/xdg/foot && cp "$B/desktop/foot.ini" /etc/xdg/foot/foot.ini
+update-alternatives --set x-terminal-emulator /usr/bin/foot 2>/dev/null \
+    || update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator /usr/bin/foot 60
 python3 "$B/desktop/make-dock.py" /usr/share/syntax/desktop/waybar.json
 
 step "Interface : thème, polices, icônes"

@@ -4,7 +4,7 @@ pkill -x fuzzel
 mkdir -p "${XDG_CACHE_HOME:-$HOME/.cache}"
 CHOICE="$(printf 'Verrouiller\nFermer la session\nRedémarrer\nÉteindre\n' | \
     fuzzel --config=/usr/share/syntax/desktop/fuzzel.ini --dmenu --lines=4 --width=26 \
-           --prompt='⏻  ' --placeholder='')"
+           --prompt='  ' --placeholder='')"
 case "$CHOICE" in
     Verrouiller) exec swaylock -f -c 101014 ;;
     "Fermer la session") exec labwc --exit ;;

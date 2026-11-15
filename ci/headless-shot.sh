@@ -16,7 +16,7 @@ runuser -u "$U" -- env XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" SESSION_CMD="$SESSION_
 sleep 6
 W="$(ls "$XDG_RUNTIME_DIR" | grep -E '^wayland-[0-9]+$' | head -1)"
 echo "socket wayland : ${W:-aucune}"
-RU() { runuser -u "$U" -- env XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" WAYLAND_DISPLAY="$W" "$@"; }
+RU() { runuser -u "$U" -- env XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" WAYLAND_DISPLAY="$W" LANG=fr_FR.UTF-8 HOME="$(getent passwd "$U" | cut -d: -f6)" "$@"; }
 RU wlr-randr --output HEADLESS-1 --custom-mode 1920x1080 || RU wlr-randr || true
 sleep "$WAIT"
 RU wlr-randr | head -5 || true
