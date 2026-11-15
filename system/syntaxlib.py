@@ -15,7 +15,7 @@ BOOT_CONF = os.environ.get("SYNTAX_BOOT_CONF", "/boot/firmware/syntax.conf")
 CMDLINE = os.environ.get("SYNTAX_CMDLINE", "/boot/firmware/cmdline.txt")
 
 TOKEN_FILE = os.path.join(ETC, "tunnel.token")
-CF_DIR = os.path.join(ETC, "cloudflared")
+CF_DIR = os.path.join(ETC, ".cloudflared")  # = $HOME/.cloudflared de cloudflared
 CF_CONFIG = os.path.join(CF_DIR, "config.yml")
 CF_CERT = os.path.join(CF_DIR, "cert.pem")
 PORTAL_CONF = os.path.join(ETC, "portal.conf")
@@ -212,6 +212,10 @@ def tunnel_set_token(raw):
     if not m:
         return False, "Jeton invalide : colle le jeton (ou la commande complète) fourni par Cloudflare."
     write_private(TOKEN_FILE, m.group(0) + "\n")
+    try:
+        os.remove(CF_CONFIG)
+    except OSError:
+        pass
     tunnel_enable()
     return True, "Tunnel activé."
 

@@ -82,7 +82,7 @@ VERSION_CODENAME=$CODENAME
 ID=debian
 ID_LIKE=debian
 SYNTAX_VERSION=$VERSION
-HOME_URL="https://github.com/opencorp2030-ctrl"
+HOME_URL="https://github.com/opencorp2030-ctrl/Syntax"
 OSR
 [ -L /etc/os-release ] || ln -sf ../usr/lib/os-release /etc/os-release
 echo "Syntax OS $VERSION \\n \\l" > /etc/issue

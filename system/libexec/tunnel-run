@@ -8,8 +8,8 @@ if [ -s /etc/syntax/tunnel.token ]; then
     TUNNEL_TOKEN="$(cat /etc/syntax/tunnel.token)"
     export TUNNEL_TOKEN
     exec cloudflared --no-autoupdate tunnel run
-elif [ -s /etc/syntax/cloudflared/config.yml ]; then
-    exec cloudflared --no-autoupdate tunnel --config /etc/syntax/cloudflared/config.yml run
+elif [ -s /etc/syntax/.cloudflared/config.yml ]; then
+    exec cloudflared --no-autoupdate tunnel --config /etc/syntax/.cloudflared/config.yml run
 fi
 echo "Aucun tunnel configuré."
 exit 0
