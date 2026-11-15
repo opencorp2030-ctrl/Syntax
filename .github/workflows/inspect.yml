@@ -33,7 +33,7 @@ jobs:
           C bash /tmp/syntax-build/desktop-setup.sh 2>&1 | grep -v '^Get:\|^Selecting\|^Preparing\|^Unpacking\|^Setting up\|Reading database'
           set +e
           echo "=== setup_env"; cat $R/usr/bin/setup_env
-          HOOK='/usr/share/syntax/desktop/bin/launcher & sleep 4; grim /tmp/shot2.png; pkill -x fuzzel; sleep 1; pcmanfm >/dev/null 2>&1 & sleep 3; x-terminal-emulator 2>&1 | tail -3 & sleep 7; grim /tmp/shot3.png; /usr/share/syntax/desktop/bin/power-menu & sleep 3; grim /tmp/shot4.png; pkill -x fuzzel; pgrep -a -u $(id -u) . | cut -c1-100 | grep -v gvfs'
+          HOOK='/usr/share/syntax/desktop/bin/launcher & sleep 4; grim /tmp/shot2.png; pkill -x fuzzel; sleep 1; pcmanfm >/dev/null 2>&1 & sleep 3; (script -qc "echo pty-ok" /dev/null; ls -l /usr/bin/x-terminal-emulator /etc/alternatives/x-terminal-emulator; foot -d info sh -c "echo bonjour; sleep 40" > /tmp/foot.log 2>&1; echo foot-exit=$? >> /tmp/foot.log) & sleep 7; cat /tmp/foot.log; grim /tmp/shot3.png; /usr/share/syntax/desktop/bin/power-menu & sleep 3; grim /tmp/shot4.png; pkill -x fuzzel; pgrep -a -u $(id -u) . | cut -c1-100 | grep -v gvfs'
           C env SHOT_HOOK="$HOOK" bash /tmp/headless-shot.sh pi /tmp/shot.png 22
           for n in shot shot2 shot3 shot4; do
             sudo cp $R/tmp/$n.png $n.png && convert $n.png -resize 1280x -quality 70 $n.jpg && { echo "B64 $n"; base64 -w0 $n.jpg; echo; }

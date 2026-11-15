@@ -2,7 +2,7 @@ name: build-image
 on:
   push:
     branches: ['claude/**', 'main']
-    paths: ['build/**', 'system/**', 'rootfs/**', 'boot/**', 'branding/**', 'VERSION', '.github/workflows/build.yml']
+    paths: ['build/**', 'system/**', 'rootfs/**', 'boot/**', 'branding/**', 'desktop/**', 'ci/headless-shot.sh', 'VERSION', '.github/workflows/build.yml']
   workflow_dispatch:
     inputs:
       release:
@@ -53,10 +53,27 @@ jobs:
             echo "- Image : \`$(ls syntax-os-*.img.xz)\` — $((SIZE / 1048576)) Mo"
             echo "- SHA-256 : \`$(cut -d' ' -f1 syntax-os-*.sha256)\`"
           } >> "$GITHUB_STEP_SUMMARY"
+      - name: Capture du bureau
+        if: always()
+        run: |
+          sudo apt-get install -y -qq imagemagick >/dev/null 2>&1 || true
+          for f in out/bureau*.png; do
+            [ -f "$f" ] || continue
+            convert "$f" -resize 1280x -quality 70 "${f%.png}.jpg" && { echo "B64 $f"; base64 -w0 "${f%.png}.jpg"; echo; }
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: captures-bureau
+          path: out/bureau*.png
+          if-no-files-found: ignore
+          retention-days: 7
       - uses: actions/upload-artifact@v4
         with:
           name: syntax-os-${{ env.VERSION }}-arm64
-          path: out/*
+          path: |
+            out/*.img.xz
+            out/*.sha256
           compression-level: 0
           retention-days: 7
       - name: Release
