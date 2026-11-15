@@ -78,17 +78,17 @@ syntax connect status       # état de l'accès Internet
 syntax connect login <hôte> # tunnel + DNS automatiques sur ton domaine
 syntax connect token <jeton>
 syntax connect off | on | reset
-syntax headless on | off    # écran virtuel 1080p pour un Pi sans moniteur
+syntax headless on | off    # force un écran virtuel 1080p (Pi sans moniteur)
 syntax ai                   # installe Ollama (modèles d'IA locaux)
 syntax update               # met à jour le système
 ```
 
 ## Utilisation sans moniteur
 
-L'image active par défaut un écran virtuel 1920×1080 sur le port HDMI 0, pour que le bureau
-démarre et soit visible dans l'onglet *Écran* même sans moniteur. Si tu branches un écran d'une
-autre définition, désactive-le : `syntax headless off` (ou `HEADLESS=0` dans `syntax.conf`), puis
-redémarre.
+Sans moniteur, le bureau démarre sur une sortie virtuelle et reste visible dans l'onglet
+*Écran*. Si l'onglet reste noir, force un écran virtuel 1920×1080 sur le port HDMI 0 avec
+`syntax headless on` (ou `HEADLESS=1` dans `syntax.conf`), puis redémarre. Désactive-le
+(`syntax headless off`) avant de rebrancher un moniteur d'une autre définition.
 
 ## Construire l'image
 

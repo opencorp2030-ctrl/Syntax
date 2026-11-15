@@ -90,7 +90,7 @@ mount --bind /dev/pts "$MNT/dev/pts"
 mount -t tmpfs tmpfs "$MNT/run"
 mv "$MNT/etc/resolv.conf" "$MNT/etc/resolv.conf.syntax-orig" 2>/dev/null || true
 cat /etc/resolv.conf > "$MNT/etc/resolv.conf"
-chroot "$MNT" /usr/bin/env -i HOME=/root TERM=xterm PATH=/usr/sbin:/usr/bin:/sbin:/bin \
+chroot "$MNT" /usr/bin/env -i HOME=/root TERM=xterm PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     VERSION="$VERSION" /bin/bash /tmp/syntax-build/chroot-setup.sh
 umount "$MNT/tmp/syntax-build"
 find "$MNT/tmp" -mindepth 1 -delete 2>/dev/null || true
@@ -101,9 +101,6 @@ step "Fichiers de la partition de démarrage"
 cp "$STAGE/boot/syntax.conf" "$MNT/boot/firmware/syntax.conf"
 cp "$MNT/usr/lib/syntax/userconf.txt" "$MNT/boot/firmware/userconf.txt"
 rm -f "$MNT/usr/lib/syntax/userconf.txt"
-CMD="$(tr -d '\n' < "$MNT/boot/firmware/cmdline.txt")"
-case "$CMD" in *video=HDMI-A-1:*) ;; *) CMD="$CMD video=HDMI-A-1:1920x1080@60D" ;; esac
-echo "$CMD" > "$MNT/boot/firmware/cmdline.txt"
 printf 'Syntax OS %s\n' "$VERSION" > "$MNT/boot/firmware/issue.txt"
 cat "$MNT/boot/firmware/cmdline.txt"
 ls -la "$MNT/boot/firmware" | grep -E 'initramfs|kernel|syntax|userconf|cmdline'
