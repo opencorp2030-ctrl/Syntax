@@ -298,24 +298,24 @@ step "Bluetooth : souris et claviers Bluetooth Low Energy"
 # Un périphérique BLE (beaucoup de souris et claviers Bluetooth récents) s'appaire et
 # indique « connecté » même quand le profil clavier/souris (HID sur GATT) n'est pas
 # activé dans BlueZ — symptôme typique : connecté, mais le curseur ne bouge pas.
+# BlueZ (GKeyFile) retient la dernière occurrence de chaque clé : on ajoute notre
+# propre bloc à la fin du fichier plutôt que de modifier les lignes d'origine, ce qui
+# fonctionne quel que soit le contenu déjà présent.
 BTCONF=/etc/bluetooth/main.conf
 if [ -f "$BTCONF" ]; then
-    for kv in "Experimental=true" "KernelExperimental=true" "ControllerMode=dual" "FastConnectable=true"; do
-        k="${kv%%=*}"
-        if grep -q "^#\?\s*$k\s*=" "$BTCONF"; then
-            sed -i "s|^#\?\s*$k\s*=.*|$kv|" "$BTCONF"
-        else
-            sed -i "/^\[General\]/a $kv" "$BTCONF"
-        fi
-    done
-    if grep -q '^\[Policy\]' "$BTCONF"; then
-        grep -q '^\s*AutoEnable\s*=' "$BTCONF" \
-            && sed -i 's|^\s*AutoEnable\s*=.*|AutoEnable=true|' "$BTCONF" \
-            || sed -i '/^\[Policy\]/a AutoEnable=true' "$BTCONF"
-    else
-        printf '\n[Policy]\nAutoEnable=true\n' >> "$BTCONF"
-    fi
-    grep -A1 '^\[General\]' "$BTCONF" | head -6
+    cat >> "$BTCONF" <<'BT'
+
+# --- Syntax OS : prise en charge des périphériques Bluetooth Low Energy (BLE) ---
+[General]
+ControllerMode = dual
+FastConnectable = true
+Experimental = true
+KernelExperimental = true
+
+[Policy]
+AutoEnable=true
+BT
+    echo "--- $BTCONF (fin)"; tail -n 12 "$BTCONF"
 else
     warn "/etc/bluetooth/main.conf introuvable."
 fi
