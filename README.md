@@ -27,6 +27,10 @@ Cloudflare.
 - **Mise à jour automatique** : Syntax OS vérifie chaque jour la dernière version publiée sur
   GitHub et s'applique tout seul (fichiers du système Syntax + paquets), sans jamais réinstaller
   l'image ni toucher à tes données.
+- **Application de mise à jour** : icône « Mise à jour Syntax » dans le dock, pour lancer la
+  vérification et l'installation sans passer par le terminal.
+- **Plusieurs comptes** : crée d'autres comptes (administrateur ou non) depuis l'onglet Comptes
+  du portail, chacun avec son mot de passe, comme les profils utilisateurs sur un PC.
 
 ## Installer
 
@@ -53,6 +57,7 @@ Cloudflare.
 | Aperçu | Charge, température, mémoire, stockage, adresses, redémarrage / extinction, mot de passe |
 | Écran | Le bureau du Pi dans le navigateur (clavier, souris, presse-papiers, plein écran) |
 | Terminal | Un shell complet sous ton compte |
+| Comptes | Créer d'autres comptes, changer leur mot de passe, en supprimer |
 | Accès Internet | Mise en place du tunnel Cloudflare |
 
 ### Accès depuis Internet avec ton domaine Cloudflare (gratuit)
@@ -104,9 +109,14 @@ syntax self-update           # applique la dernière version de Syntax OS (autom
 ## Utilisation sans moniteur
 
 Sans moniteur, le bureau démarre sur une sortie virtuelle et reste visible dans l'onglet
-*Écran*. Si l'onglet reste noir, force un écran virtuel 1920×1080 sur le port HDMI 0 avec
-`syntax headless on` (ou `HEADLESS=1` dans `syntax.conf`), puis redémarre. Désactive-le
-(`syntax headless off`) avant de rebrancher un moniteur d'une autre définition.
+*Écran*. Si l'onglet reste noir **et qu'aucun moniteur n'est branché**, force un écran
+virtuel 1920×1080 sur le port HDMI 0 avec `syntax headless on` (ou `HEADLESS=1` dans
+`syntax.conf`), puis redémarre.
+
+**N'active jamais ce réglage si un moniteur est réellement branché** : il impose un mode
+vidéo fixe, et si ce mode ne convient pas à ce moniteur, l'image peut disparaître
+complètement (écran du Pi compris). Si ça arrive, repasse par l'onglet Terminal — il
+fonctionne même sans image — pour lancer `syntax headless off` puis `sudo reboot`.
 
 ## Construire l'image
 

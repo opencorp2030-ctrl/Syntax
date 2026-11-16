@@ -40,6 +40,7 @@ if os.path.exists("/opt/syntax-apps/satisdocs/satisdocs"):
 if os.path.exists("/usr/share/syntax/satisreader"):
     pinned.append(("satisreader", "xdg-open http://127.0.0.1:8092/", icon("satisreader"), "SatisReader"))
 pinned.append(("connect", "xdg-open http://localhost/", "/usr/share/syntax/logo-connect.svg", "Syntax Connect"))
+pinned.append(("update", "/usr/share/syntax/desktop/bin/update-app", icon("update"), "Mise à jour Syntax"))
 pinned.append(("settings", "rpcc", icon("preferences-system", "systemsettings", "gnome-control-center"), "Réglages"))
 
 cfg = {

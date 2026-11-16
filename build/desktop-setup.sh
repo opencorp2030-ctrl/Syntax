@@ -58,7 +58,7 @@ J
 apt-get install -y --no-install-recommends \
     waybar fuzzel mako-notifier fonts-inter fonts-font-awesome papirus-icon-theme \
     network-manager-applet blueman pavucontrol swaybg wl-clipboard grim slurp wlr-randr \
-    libglib2.0-bin cpio foot fonts-jetbrains-mono php-cli
+    libglib2.0-bin cpio foot fonts-jetbrains-mono php-cli zenity policykit-1
 
 step "Interface : fichiers"
 mkdir -p /usr/share/syntax/desktop /usr/share/themes/Syntax
@@ -176,6 +176,18 @@ DESK
 else
     warn "SatisReader non récupéré."
 fi
+
+cp "$B/desktop/bin/update-app" /usr/share/syntax/desktop/bin/update-app
+chmod 755 /usr/share/syntax/desktop/bin/update-app
+cat > /usr/share/applications/syntax-update.desktop <<'DESK'
+[Desktop Entry]
+Type=Application
+Name=Mise à jour Syntax
+Comment=Vérifie et installe la dernière version de Syntax OS
+Exec=/usr/share/syntax/desktop/bin/update-app
+Icon=update
+Categories=System;
+DESK
 
 python3 "$B/desktop/make-dock.py" /usr/share/syntax/desktop/waybar.json
 

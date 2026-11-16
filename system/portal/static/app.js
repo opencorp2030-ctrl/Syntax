@@ -72,11 +72,12 @@ $('logout').addEventListener('click', async () => { await api('/api/logout', {})
 function selectTab(name) {
   currentTab = name;
   for (const b of $('tabs').children) b.classList.toggle('on', b.dataset.tab === name);
-  for (const t of ['home', 'screen', 'term', 'net']) $('tab-' + t).hidden = t !== name;
+  for (const t of ['home', 'screen', 'term', 'net', 'accounts']) $('tab-' + t).hidden = t !== name;
   if (name === 'home') refreshStatus();
   if (name === 'term') openTerm();
   if (name === 'screen') openScreen();
   if (name === 'net') refreshTunnel();
+  if (name === 'accounts') refreshAccounts();
 }
 $('tabs').addEventListener('click', (ev) => { if (ev.target.dataset.tab) selectTab(ev.target.dataset.tab); });
 document.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => selectTab(b.dataset.go)));
@@ -299,6 +300,68 @@ $('tok-form').addEventListener('submit', async (ev) => {
   $('tok-msg').textContent = r.ok ? r.message : (r.error || 'Échec.');
   if (r.ok) $('tok').value = '';
   refreshTunnel();
+});
+
+// ------------------------------------------------------------------ comptes
+let meUser = null;
+
+async function refreshAccounts() {
+  const r = await api('/api/accounts');
+  if (r.status !== 200) return;
+  meUser = r.you;
+  const box = $('accounts-list');
+  box.replaceChildren();
+  for (const acc of r.accounts) {
+    const row = document.createElement('div');
+    row.className = 'step';
+    const n = document.createElement('div');
+    n.className = 'n';
+    n.textContent = acc.username[0].toUpperCase();
+    const info = document.createElement('div');
+    const h = document.createElement('h3');
+    h.textContent = acc.username + (acc.username === meUser ? ' (toi)' : '');
+    const p = document.createElement('p');
+    p.textContent = (acc.admin ? 'Administrateur' : 'Compte standard')
+      + (acc.default_password ? ' — mot de passe d’usine non changé' : '');
+    const actions = document.createElement('div');
+    actions.className = 'row';
+    actions.style.marginTop = '8px';
+    const resetBtn = document.createElement('button');
+    resetBtn.textContent = 'Nouveau mot de passe';
+    resetBtn.addEventListener('click', async () => {
+      const pw = prompt('Nouveau mot de passe pour ' + acc.username + ' (10 caractères min.) :');
+      if (!pw) return;
+      const res = await api('/api/accounts/reset', { username: acc.username, password: pw });
+      alert(res.ok ? 'Mot de passe changé.' : (res.error || 'Échec.'));
+    });
+    actions.append(resetBtn);
+    if (acc.username !== meUser && r.accounts.length > 1) {
+      const delBtn = document.createElement('button');
+      delBtn.className = 'danger';
+      delBtn.textContent = 'Supprimer';
+      delBtn.addEventListener('click', async () => {
+        if (!confirm('Supprimer le compte « ' + acc.username + ' » et ses fichiers ?')) return;
+        const res = await api('/api/accounts/delete', { username: acc.username });
+        if (!res.ok) alert(res.error || 'Échec.');
+        refreshAccounts();
+      });
+      actions.append(delBtn);
+    }
+    info.append(h, p, actions);
+    row.append(n, info);
+    box.append(row);
+  }
+}
+
+$('account-form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const r = await api('/api/accounts/create', {
+    username: $('acc-user').value.trim(),
+    password: $('acc-pass').value,
+    admin: $('acc-admin').checked,
+  });
+  $('account-msg').textContent = r.ok ? r.message : (r.error || 'Échec.');
+  if (r.ok) { ev.target.reset(); $('acc-admin').checked = true; refreshAccounts(); }
 });
 
 // ---------------------------------------------------------------- démarrage

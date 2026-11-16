@@ -224,6 +224,42 @@ async def api_password(request):
     return web.json_response({"ok": True})
 
 
+# ------------------------------------------------------------------ comptes
+async def api_accounts(request):
+    return web.json_response({"ok": True, "accounts": await in_thread(lib.list_accounts),
+                              "you": request["session"]["user"]})
+
+
+async def api_accounts_create(request):
+    data = await body(request)
+    ok, msg = await in_thread(lib.create_account, str(data.get("username", "")),
+                              str(data.get("password", "")), bool(data.get("admin", True)))
+    return web.json_response({"ok": ok, "message" if ok else "error": msg}, status=200 if ok else 400)
+
+
+async def api_accounts_delete(request):
+    data = await body(request)
+    username = str(data.get("username", ""))
+    if username == request["session"]["user"]:
+        return jerr("Impossible de supprimer le compte avec lequel tu es connecté.")
+    ok, msg = await in_thread(lib.delete_account, username)
+    if ok:
+        for k in [k for k, v in sessions.items() if v["user"] == username]:
+            sessions.pop(k, None)
+    return web.json_response({"ok": ok, "message" if ok else "error": msg}, status=200 if ok else 400)
+
+
+async def api_accounts_reset(request):
+    data = await body(request)
+    username = str(data.get("username", ""))
+    ok, msg = await in_thread(lib.admin_reset_password, username, str(data.get("password", "")))
+    if ok:
+        keep = request.cookies.get(COOKIE)
+        for k in [k for k, v in sessions.items() if v["user"] == username and k != keep]:
+            sessions.pop(k, None)
+    return web.json_response({"ok": ok, "message" if ok else "error": msg}, status=200 if ok else 400)
+
+
 # ------------------------------------------------------------------ système
 async def api_status(request):
     st = await in_thread(lib.system_status)
@@ -491,6 +527,10 @@ def make_app():
     r.add_get("/api/session", api_session)
     r.add_post("/api/logout", api_logout)
     r.add_post("/api/password", api_password)
+    r.add_get("/api/accounts", api_accounts)
+    r.add_post("/api/accounts/create", api_accounts_create)
+    r.add_post("/api/accounts/delete", api_accounts_delete)
+    r.add_post("/api/accounts/reset", api_accounts_reset)
     r.add_get("/api/status", api_status)
     r.add_post("/api/power", api_power)
     r.add_post("/api/headless", api_headless)

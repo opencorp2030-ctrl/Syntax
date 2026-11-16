@@ -104,6 +104,74 @@ def set_password(user, new):
     return code == 0, out
 
 
+# ----------------------------------------------------------------- comptes
+USERNAME_RE = re.compile(r"^[a-z][a-z0-9-]{0,31}$")
+RESERVED_USERS = {"root", "syntax", "satisreader", "vnc", "pi"}
+
+
+def list_accounts():
+    accounts = []
+    for name in human_users():
+        try:
+            p = pwd.getpwnam(name)
+        except KeyError:
+            continue
+        groups = run(["id", "-nG", name])[1].split()
+        accounts.append({
+            "username": name,
+            "admin": "sudo" in groups,
+            "default_password": has_default_password(name),
+        })
+    return sorted(accounts, key=lambda a: a["username"])
+
+
+def create_account(username, password, admin=True):
+    username = (username or "").strip().lower()
+    if not USERNAME_RE.match(username):
+        return False, "Identifiant invalide : lettres minuscules, chiffres et tirets, 32 caractères maximum, doit commencer par une lettre."
+    if username in RESERVED_USERS:
+        return False, "Cet identifiant est réservé."
+    if username in human_users():
+        return False, "Ce compte existe déjà."
+    err = check_new_password(password)
+    if err:
+        return False, err
+    groups = ["sudo"] if admin else []
+    for g in ("docker", "plugdev", "video", "audio", "input"):
+        if run(["getent", "group", g])[0] == 0:
+            groups.append(g)
+    code, out = run(["useradd", "-m", "-s", "/bin/bash", "-G", ",".join(groups), username])
+    if code != 0:
+        return False, out or "Échec de la création du compte."
+    ok, out = set_password(username, password)
+    if not ok:
+        run(["userdel", "-r", username])
+        return False, out or "Échec de l'initialisation du mot de passe."
+    return True, f"Compte « {username} » créé."
+
+
+def delete_account(username, keep_home=False):
+    if username not in human_users():
+        return False, "Ce compte n'existe pas."
+    if len(human_users()) <= 1:
+        return False, "Impossible de supprimer le dernier compte."
+    cmd = ["userdel"] if keep_home else ["userdel", "-r"]
+    code, out = run(cmd + [username], timeout=30)
+    if code != 0:
+        return False, out or "Échec de la suppression."
+    return True, f"Compte « {username} » supprimé."
+
+
+def admin_reset_password(username, new):
+    if username not in human_users():
+        return False, "Ce compte n'existe pas."
+    err = check_new_password(new)
+    if err:
+        return False, err
+    ok, out = set_password(username, new)
+    return ok, (f"Mot de passe de « {username} » réinitialisé." if ok else (out or "Échec."))
+
+
 # ----------------------------------------------------------------- système
 def system_status():
     st = {"hostname": socket.gethostname(), "time": int(time.time())}

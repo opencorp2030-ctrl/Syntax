@@ -44,6 +44,7 @@
       <button data-tab="screen">Écran</button>
       <button data-tab="term">Terminal</button>
       <button data-tab="net">Accès Internet</button>
+      <button data-tab="accounts">Comptes</button>
     </nav>
     <button id="logout" class="ghost">Déconnexion</button>
   </header>
@@ -70,7 +71,7 @@
           <button id="btn-reboot">Redémarrer</button>
           <button id="btn-off" class="danger">Éteindre</button>
         </div>
-        <label class="switch"><input type="checkbox" id="headless"><span>Forcer un écran virtuel 1080p (si l'onglet Écran reste noir sans moniteur ; appliqué au redémarrage)</span></label>
+        <label class="switch"><input type="checkbox" id="headless"><span>Forcer un écran virtuel 1080p (appliqué au redémarrage). <strong>N'active ça que si aucun moniteur n'est branché</strong> : avec un vrai moniteur branché, ça peut couper l'image si le mode forcé ne lui convient pas.</span></label>
         <h3 class="sep">Mot de passe</h3>
         <form id="pw-form" class="inline">
           <input type="password" id="pw-old" placeholder="Actuel" autocomplete="current-password" required>
@@ -138,6 +139,24 @@
     <div class="card">
       <h3>Sécurité</h3>
       <p class="muted">Le tunnel ne démarre jamais tant qu'un compte utilise encore le mot de passe d'usine. Pour une protection supplémentaire, ajoute une règle <strong>Cloudflare Access</strong> (gratuit jusqu'à 50 utilisateurs) devant l'adresse de ton Pi : seules les adresses e-mail que tu autorises pourront atteindre cette page.</p>
+    </div>
+  </section>
+
+  <section id="tab-accounts" class="page" hidden>
+    <div class="card">
+      <h3>Comptes de cette machine</h3>
+      <p class="muted">Chaque compte a son propre mot de passe et sa propre session (terminal, fichiers). Un compte « administrateur » peut utiliser <code>sudo</code> et gérer les autres comptes.</p>
+      <div id="accounts-list" class="steps"></div>
+    </div>
+    <div class="card">
+      <h3>Ajouter un compte</h3>
+      <form id="account-form" class="inline">
+        <input id="acc-user" placeholder="identifiant" autocapitalize="none" spellcheck="false" pattern="[a-z][a-z0-9-]*" required>
+        <input id="acc-pass" type="password" placeholder="mot de passe (10 caractères min.)" minlength="10" required>
+        <label class="switch" style="margin:0 10px"><input type="checkbox" id="acc-admin" checked><span>Administrateur</span></label>
+        <button type="submit" class="primary">Créer</button>
+      </form>
+      <p class="muted" id="account-msg"></p>
     </div>
   </section>
 </div>
