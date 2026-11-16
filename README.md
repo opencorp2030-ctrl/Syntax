@@ -31,6 +31,22 @@ Cloudflare.
   vérification et l'installation sans passer par le terminal.
 - **Plusieurs comptes** : crée d'autres comptes (administrateur ou non) depuis l'onglet Comptes
   du portail, chacun avec son mot de passe, comme les profils utilisateurs sur un PC.
+- **Dock personnalisable** : change la taille des icônes, ajoute ou retire des applications,
+  change leur ordre — clic droit sur une icône du dock, ou lance « Réglages du dock ».
+
+## Le dock
+
+Clic droit sur n'importe quelle icône du dock (ou lance l'application « Réglages du dock »,
+disponible dans le lanceur) pour :
+
+- changer la **taille des icônes** (quatre tailles, appliquée tout de suite) ;
+- **ajouter** une application installée (tout ce qui a une icône dans le menu peut être épinglé) ;
+- **retirer** une icône du dock ;
+- **réorganiser** l'ordre des icônes.
+
+Techniquement, le dock de Syntax OS (waybar) ne peut pas afficher un nom en permanence sous
+chaque icône comme le Dock de macOS — survole une icône pour voir son nom à la place. Le reste
+(taille, contenu, ordre) fonctionne comme décrit.
 
 ## Installer
 
@@ -100,7 +116,6 @@ syntax connect status       # état de l'accès Internet
 syntax connect login <hôte> # tunnel + DNS automatiques sur ton domaine
 syntax connect token <jeton>
 syntax connect off | on | reset
-syntax headless on | off    # force un écran virtuel 1080p (Pi sans moniteur)
 syntax ai                   # installe Ollama (modèles d'IA locaux)
 syntax update               # met à jour le système
 syntax self-update           # applique la dernière version de Syntax OS (automatique chaque jour)
@@ -108,15 +123,16 @@ syntax self-update           # applique la dernière version de Syntax OS (autom
 
 ## Utilisation sans moniteur
 
-Sans moniteur, le bureau démarre sur une sortie virtuelle et reste visible dans l'onglet
-*Écran*. Si l'onglet reste noir **et qu'aucun moniteur n'est branché**, force un écran
-virtuel 1920×1080 sur le port HDMI 0 avec `syntax headless on` (ou `HEADLESS=1` dans
-`syntax.conf`), puis redémarre.
+Sans moniteur branché, le bureau démarre sur une sortie de secours fournie par labwc et
+reste visible dans l'onglet *Écran* — automatiquement, sans aucun réglage à faire. Cette
+sortie de secours ne s'active que lorsqu'il n'y a vraiment aucun écran ; dès qu'un vrai
+moniteur est branché, c'est lui qui est utilisé.
 
-**N'active jamais ce réglage si un moniteur est réellement branché** : il impose un mode
-vidéo fixe, et si ce mode ne convient pas à ce moniteur, l'image peut disparaître
-complètement (écran du Pi compris). Si ça arrive, repasse par l'onglet Terminal — il
-fonctionne même sans image — pour lancer `syntax headless off` puis `sudo reboot`.
+Les versions 1.1 et 1.2 proposaient un réglage « écran virtuel forcé » qui imposait un
+mode vidéo fixe sur le port HDMI 0. Il a été retiré en 1.3 : ce mode restait actif même
+une fois un vrai moniteur branché sur ce port, et si ce mode ne lui convenait pas l'image
+disparaissait complètement, écran du Pi compris. L'onglet *Écran* de Syntax Connect
+reflète toujours exactement ce qu'affiche le Pi, jamais un deuxième écran en plus.
 
 ## Construire l'image
 

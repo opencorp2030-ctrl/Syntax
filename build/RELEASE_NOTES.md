@@ -1,4 +1,4 @@
-Syntax OS 1.2 — plusieurs comptes, application de mise à jour, garde-fou sur l'écran virtuel.
+Syntax OS 1.3 — dock personnalisable, écran virtuel forcé retiré (il cassait un vrai moniteur).
 
 **Installation**
 
@@ -9,10 +9,9 @@ Syntax OS 1.2 — plusieurs comptes, application de mise à jour, garde-fou sur 
 5. Identifiant `syntax`, mot de passe `syntax` — le portail t'oblige à le remplacer à la première connexion.
 
 **Dans cette version** :
-- **Onglet Comptes** dans Syntax Connect : crée d'autres comptes (administrateur ou non), change leur mot de passe, supprime-les — comme les profils utilisateurs sur un PC.
-- **Application « Mise à jour Syntax »** dans le dock : vérifie et installe la dernière version sans passer par le terminal.
-- **Écran virtuel forcé** : averti plus clairement qu'il ne faut l'activer que sans moniteur branché — un mauvais réglage pouvait couper l'image sur un vrai écran.
+- **Écran virtuel forcé retiré.** Ce réglage (1.1/1.2) pouvait couper l'image sur un vrai moniteur branché. Sans moniteur, une sortie de secours intégrée à labwc prend le relais automatiquement — jamais un deuxième écran en plus d'un vrai.
+- **Dock personnalisable** : taille des icônes, ajout/retrait d'applications, réorganisation — clic droit sur une icône du dock, ou lance « Réglages du dock » depuis le lanceur. Limite technique honnête : pas de nom affiché en permanence sous chaque icône (waybar ne le permet pas) — le survol affiche le nom à la place.
 
-**Connu, non résolu dans cette version** : certaines souris et claviers Bluetooth se connectent mais ne fonctionnent pas. Le correctif tenté en 1.1 (profil Bluetooth Low Energy) n'a pas suffi pour tous les appareils ; un diagnostic plus précis est nécessaire avant un nouveau correctif.
+**Connu, non résolu** : certaines souris et claviers Bluetooth se connectent mais ne répondent pas. En attente d'un diagnostic (`bluetoothctl info`, `systemctl status bluetooth`) avant un nouveau correctif.
 
 Tout le reste (accès par Internet avec ton domaine Cloudflare, etc.) est expliqué dans le README.

@@ -265,7 +265,6 @@ async def api_status(request):
     st = await in_thread(lib.system_status)
     st["user"] = request["session"]["user"]
     st["screen"] = os.path.exists(screen_socket(request["session"]["user"]))
-    st["headless"] = lib.headless_enabled()
     return web.json_response(st)
 
 
@@ -274,12 +273,6 @@ async def api_power(request):
     if not lib.power(str(data.get("action", ""))):
         return jerr("Action inconnue.")
     return web.json_response({"ok": True})
-
-
-async def api_headless(request):
-    data = await body(request)
-    ok = await in_thread(lib.set_headless, bool(data.get("enabled")))
-    return web.json_response({"ok": ok, "headless": lib.headless_enabled()})
 
 
 # ------------------------------------------------------------------- tunnel
@@ -533,7 +526,6 @@ def make_app():
     r.add_post("/api/accounts/reset", api_accounts_reset)
     r.add_get("/api/status", api_status)
     r.add_post("/api/power", api_power)
-    r.add_post("/api/headless", api_headless)
     r.add_get("/api/tunnel", api_tunnel)
     r.add_post("/api/tunnel/token", api_tunnel_token)
     r.add_post("/api/tunnel/login/start", api_tunnel_login_start)

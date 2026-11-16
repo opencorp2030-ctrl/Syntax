@@ -363,19 +363,17 @@ def tunnel_create_named(hostname):
 
 
 # ------------------------------------------------------------- mode sans écran
+# Avant la 1.3, un réglage forçait un mode vidéo fixe sur HDMI-0 pour les Pi sans
+# moniteur. Il a été retiré : forcer un mode peut rester actif même quand un vrai
+# moniteur est ensuite branché sur ce port, et si ce mode ne lui convient pas l'image
+# disparaît complètement (c'est ce qui est arrivé). labwc fournit déjà, sans aucun
+# réglage, une sortie de secours qui ne s'active que lorsqu'il n'y a vraiment aucun
+# écran — jamais en plus d'un écran réel.
 def headless_enabled():
-    return HEADLESS_ARG.split(":")[0] in read_file(CMDLINE)
+    return False
 
 
-def set_headless(on):
-    line = read_file(CMDLINE).strip()
-    if not line:
-        return False
-    args = [a for a in line.split() if not a.startswith("video=HDMI-A-1:")]
-    if on:
-        args.append(HEADLESS_ARG)
-    with open(CMDLINE, "w", encoding="utf-8") as f:
-        f.write(" ".join(args) + "\n")
+def set_headless(_on):
     return True
 
 
@@ -447,10 +445,7 @@ def apply_boot_config(log=print):
         log("SSH activé")
         run(["systemctl", "enable", "--now", "ssh"])
     if "HEADLESS" in conf:
-        want = conf["HEADLESS"].lower() in ("1", "yes", "true", "oui")
-        if want != headless_enabled():
-            log(f"Mode sans écran : {'activé' if want else 'désactivé'} (au prochain redémarrage)")
-            set_headless(want)
+        log("HEADLESS n'est plus utilisé depuis la 1.3 (sortie de secours automatique sans réglage).")
     if conf.get("CF_TUNNEL_TOKEN"):
         ok, msg = tunnel_set_token(conf["CF_TUNNEL_TOKEN"])
         log("Tunnel Cloudflare : " + msg)

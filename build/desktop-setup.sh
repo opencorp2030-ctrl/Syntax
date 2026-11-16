@@ -58,11 +58,14 @@ J
 apt-get install -y --no-install-recommends \
     waybar fuzzel mako-notifier fonts-inter fonts-font-awesome papirus-icon-theme \
     network-manager-applet blueman pavucontrol swaybg wl-clipboard grim slurp wlr-randr \
-    libglib2.0-bin cpio foot fonts-jetbrains-mono php-cli zenity policykit-1
+    libglib2.0-bin cpio foot fonts-jetbrains-mono php-cli zenity polkitd pkexec
 
 step "Interface : fichiers"
 mkdir -p /usr/share/syntax/desktop /usr/share/themes/Syntax
 cp -a "$B/desktop/bin" "$B/desktop/"*.css "$B/desktop/"*.ini "$B/desktop/"*.conf /usr/share/syntax/desktop/
+mkdir -p /usr/lib/syntax/desktop
+cp "$B/desktop/make-dock.py" "$B/desktop/dock-edit.py" /usr/lib/syntax/desktop/
+chmod 755 /usr/lib/syntax/desktop/*.py
 cp -a "$B/desktop/theme/." /usr/share/themes/Syntax/
 cp "$B/desktop/logo-connect.svg" /usr/share/syntax/logo-connect.svg
 cp "$B/system/portal/static/logo.svg" /usr/share/syntax/logo.svg
@@ -189,7 +192,7 @@ Icon=update
 Categories=System;
 DESK
 
-python3 "$B/desktop/make-dock.py" /usr/share/syntax/desktop/waybar.json
+python3 /usr/lib/syntax/desktop/make-dock.py /usr/share/syntax/desktop/waybar.json
 
 step "Interface : thème, polices, icônes"
 cat > /usr/share/glib-2.0/schemas/90_syntax.gschema.override <<G

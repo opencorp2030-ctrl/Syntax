@@ -124,7 +124,6 @@ async function refreshStatus() {
     const dd = document.createElement('dd'); dd.textContent = v;
     dl.append(dt, dd);
   }
-  $('headless').checked = !!s.headless;
 }
 
 $('btn-reboot').addEventListener('click', () => {
@@ -133,7 +132,6 @@ $('btn-reboot').addEventListener('click', () => {
 $('btn-off').addEventListener('click', () => {
   if (confirm('Éteindre le Pi ? Il faudra le rallumer physiquement.')) api('/api/power', { action: 'poweroff' });
 });
-$('headless').addEventListener('change', (ev) => api('/api/headless', { enabled: ev.target.checked }));
 $('pw-form').addEventListener('submit', async (ev) => {
   ev.preventDefault();
   const r = await api('/api/password', { old: $('pw-old').value, new: $('pw-new').value });

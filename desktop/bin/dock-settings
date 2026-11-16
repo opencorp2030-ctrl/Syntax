@@ -1,0 +1,91 @@
+#!/bin/bash
+# Réglages du dock de Syntax OS : taille des icônes, applications épinglées, ordre.
+set -u
+ICON=/usr/share/syntax/logo.png
+EDIT=/usr/lib/syntax/desktop/dock-edit.py
+SRC=/etc/syntax-dock.json
+TMP="$(mktemp /tmp/syntax-dock-XXXXXX.json)"
+trap 'rm -f "$TMP"' EXIT
+
+if [ -f "$SRC" ]; then cp "$SRC" "$TMP"; else echo '{"icon_size":38,"items":[]}' > "$TMP"; fi
+ORIGINAL="$(cat "$TMP")"
+
+zq() { zenity --window-icon="$ICON" "$@" 2>/dev/null; }
+
+set_size() {
+    S=$(zq --list --title="Taille des icônes" --width=320 --height=280 --hide-header \
+        --column="Taille" "Petite (28 px)" "Moyenne (38 px)" "Grande (50 px)" "Très grande (64 px)")
+    case "$S" in
+        "Petite"*) N=28 ;; "Moyenne"*) N=38 ;; "Grande"*) N=50 ;; "Très grande"*) N=64 ;;
+        *) return ;;
+    esac
+    python3 "$EDIT" "$TMP" set-size "$N"
+}
+
+add_app() {
+    LIST="$(python3 "$EDIT" "$TMP" list-available)"
+    if [ -z "$LIST" ]; then
+        zq --info --width=360 --text="Toutes les applications déjà installées sont dans le dock."
+        return
+    fi
+    ROWS=()
+    while IFS=$'\t' read -r base name; do ROWS+=("$base" "$name"); done <<< "$LIST"
+    CHOICE="$(zq --list --title="Ajouter au dock" --width=460 --height=420 \
+        --column="Fichier" --column="Application" --hide-column=1 --print-column=1 "${ROWS[@]}")"
+    [ -n "$CHOICE" ] && python3 "$EDIT" "$TMP" add "$CHOICE"
+}
+
+remove_app() {
+    LIST="$(python3 "$EDIT" "$TMP" list-current)"
+    [ -n "$LIST" ] || return
+    ROWS=()
+    while IFS=$'\t' read -r id label; do ROWS+=("$id" "$label"); done <<< "$LIST"
+    CHOICE="$(zq --list --title="Retirer du dock" --width=420 --height=400 \
+        --column="id" --column="Application" --hide-column=1 --print-column=1 "${ROWS[@]}")"
+    [ -n "$CHOICE" ] && python3 "$EDIT" "$TMP" remove "$CHOICE"
+}
+
+reorder() {
+    while true; do
+        LIST="$(python3 "$EDIT" "$TMP" list-current)"
+        [ -n "$LIST" ] || return
+        ROWS=(); N=1
+        while IFS=$'\t' read -r id label; do
+            ROWS+=("$id" "$N. $label")
+            N=$((N + 1))
+        done <<< "$LIST"
+        SEL="$(zq --list --title="Réorganiser le dock" --width=420 --height=420 \
+            --text="Choisis une icône à déplacer, ou ferme cette fenêtre pour terminer." \
+            --column="id" --column="Position" --hide-column=1 --print-column=1 "${ROWS[@]}")"
+        [ -n "$SEL" ] || return
+        DIR="$(zq --list --title="Déplacer" --width=300 --height=240 --hide-header \
+            --column="Direction" "Monter" "Descendre")"
+        case "$DIR" in
+            Monter) python3 "$EDIT" "$TMP" move-up "$SEL" ;;
+            Descendre) python3 "$EDIT" "$TMP" move-down "$SEL" ;;
+        esac
+    done
+}
+
+while true; do
+    ACTION="$(zq --list --title="Réglages du dock" --width=380 --height=330 --hide-header \
+        --text="Que veux-tu changer ?" --column="Action" \
+        "Taille des icônes" "Ajouter une application" "Retirer une application" "Réorganiser les icônes" "Terminé")"
+    case "$ACTION" in
+        "Taille des icônes") set_size ;;
+        "Ajouter une application") add_app ;;
+        "Retirer une application") remove_app ;;
+        "Réorganiser les icônes") reorder ;;
+        *) break ;;
+    esac
+done
+
+if [ "$(cat "$TMP")" = "$ORIGINAL" ]; then
+    exit 0
+fi
+
+if pkexec /usr/lib/syntax/libexec/dock-apply "$TMP"; then
+    zq --info --width=340 --text="Dock mis à jour."
+else
+    zq --error --width=380 --text="La mise à jour du dock a échoué, ou l'autorisation a été refusée."
+fi

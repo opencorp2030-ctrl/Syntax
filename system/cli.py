@@ -71,12 +71,9 @@ def cmd_connect(a):
         print("Configuration du tunnel supprimée.")
 
 
-def cmd_headless(a):
-    need_root()
-    if a.state in ("on", "off"):
-        lib.set_headless(a.state == "on")
-        print("Modification appliquée au prochain redémarrage.")
-    print("Écran virtuel 1080p :", "activé" if lib.headless_enabled() else "désactivé")
+def cmd_headless(_a):
+    print("Rien à faire : Syntax OS ne force plus de mode vidéo. Une sortie de secours")
+    print("s'active automatiquement, sans réglage, lorsqu'aucun écran n'est branché.")
 
 
 def cmd_ai(_a):
@@ -116,7 +113,7 @@ def main():
     c.add_argument("action", choices=["status", "login", "token", "on", "off", "reset"])
     c.add_argument("value", nargs="?")
     c.set_defaults(fn=cmd_connect)
-    h = sub.add_parser("headless", help="écran virtuel pour une utilisation sans moniteur")
+    h = sub.add_parser("headless", help="obsolète : retiré, voir « syntax headless »")
     h.add_argument("state", nargs="?", choices=["on", "off"])
     h.set_defaults(fn=cmd_headless)
     sub.add_parser("ai", help="installer Ollama pour faire tourner des modèles d'IA en local").set_defaults(fn=cmd_ai)
