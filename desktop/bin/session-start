@@ -5,3 +5,12 @@ start_once mako -c /usr/share/syntax/desktop/mako.conf
 ( sleep 2
   pgrep -u "$(id -u)" -x nm-applet >/dev/null || nm-applet --indicator >/dev/null 2>&1 &
   pgrep -u "$(id -u)" -f blueman-applet >/dev/null || blueman-applet >/dev/null 2>&1 & ) &
+
+# Première connexion : ouvre directement Syntax Connect, qui impose le changement du
+# mot de passe d'usine — c'est la phase de configuration initiale de Syntax OS.
+FLAG="${XDG_STATE_HOME:-$HOME/.local/state}/syntax-first-run-done"
+if [ ! -f "$FLAG" ]; then
+    mkdir -p "$(dirname "$FLAG")"
+    touch "$FLAG"
+    ( sleep 6; x-www-browser "http://localhost/" >/dev/null 2>&1 & ) &
+fi

@@ -63,7 +63,7 @@ mkdir -p /usr/lib/syntax /usr/share/syntax /var/lib/syntax
 cp -a "$B/system/." /usr/lib/syntax/
 cp -a "$B/rootfs/." /
 chown -R root:root /usr/lib/syntax /etc/syntax /etc/systemd/system/syntax-*.service
-chmod 755 /usr/lib/syntax/cli.py /usr/lib/syntax/portal/server.py /usr/lib/syntax/libexec/*
+chmod 755 /usr/lib/syntax/cli.py /usr/lib/syntax/portal/server.py /usr/lib/syntax/libexec/* /usr/lib/syntax/selfupdate.sh
 chmod 750 /etc/syntax
 ln -sf /usr/lib/syntax/cli.py /usr/bin/syntax
 echo "$VERSION" > /usr/lib/syntax/version
@@ -145,7 +145,7 @@ else
 fi
 
 step "Services"
-systemctl enable syntax-portal.service syntax-setup.service syntax-userguard.service
+systemctl enable syntax-portal.service syntax-setup.service syntax-userguard.service syntax-selfupdate.timer
 systemctl enable avahi-daemon.service 2>/dev/null || true
 systemctl disable syntax-tunnel.service 2>/dev/null || true
 systemctl disable cloudflared.service 2>/dev/null || true

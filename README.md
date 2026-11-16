@@ -24,6 +24,9 @@ Cloudflare.
 - **Sans écran ni clavier** : flashe, branche, ouvre `http://syntax.local`.
 - **Pensé pour durer** : swap compressé en RAM, `log2ram` et journal système en RAM pour épargner
   la carte SD de l'usure dans la durée.
+- **Mise à jour automatique** : Syntax OS vérifie chaque jour la dernière version publiée sur
+  GitHub et s'applique tout seul (fichiers du système Syntax + paquets), sans jamais réinstaller
+  l'image ni toucher à tes données.
 
 ## Installer
 
@@ -95,6 +98,7 @@ syntax connect off | on | reset
 syntax headless on | off    # force un écran virtuel 1080p (Pi sans moniteur)
 syntax ai                   # installe Ollama (modèles d'IA locaux)
 syntax update               # met à jour le système
+syntax self-update           # applique la dernière version de Syntax OS (automatique chaque jour)
 ```
 
 ## Utilisation sans moniteur

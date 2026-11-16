@@ -67,6 +67,8 @@ cp -a "$B/desktop/theme/." /usr/share/themes/Syntax/
 cp "$B/desktop/logo-connect.svg" /usr/share/syntax/logo-connect.svg
 cp "$B/system/portal/static/logo.svg" /usr/share/syntax/logo.svg
 cp "$B/wallpaper.jpg" /usr/share/syntax/wallpaper.jpg
+mkdir -p /usr/share/syntax/wallpapers
+cp "$B"/wallpapers/*.jpg /usr/share/syntax/wallpapers/
 cp "$B/logo.png" /usr/share/syntax/logo.png
 mkdir -p /usr/share/icons/hicolor/scalable/apps
 cp "$B"/desktop/icons/*.svg /usr/share/icons/hicolor/scalable/apps/
@@ -291,6 +293,32 @@ if [ -f /usr/share/applications/foot.desktop ]; then
         > /usr/local/share/applications/foot.desktop
 fi
 ls /usr/share/applications | tr '\n' ' '; echo
+
+step "Bluetooth : souris et claviers Bluetooth Low Energy"
+# Un périphérique BLE (beaucoup de souris et claviers Bluetooth récents) s'appaire et
+# indique « connecté » même quand le profil clavier/souris (HID sur GATT) n'est pas
+# activé dans BlueZ — symptôme typique : connecté, mais le curseur ne bouge pas.
+BTCONF=/etc/bluetooth/main.conf
+if [ -f "$BTCONF" ]; then
+    for kv in "Experimental=true" "KernelExperimental=true" "ControllerMode=dual" "FastConnectable=true"; do
+        k="${kv%%=*}"
+        if grep -q "^#\?\s*$k\s*=" "$BTCONF"; then
+            sed -i "s|^#\?\s*$k\s*=.*|$kv|" "$BTCONF"
+        else
+            sed -i "/^\[General\]/a $kv" "$BTCONF"
+        fi
+    done
+    if grep -q '^\[Policy\]' "$BTCONF"; then
+        grep -q '^\s*AutoEnable\s*=' "$BTCONF" \
+            && sed -i 's|^\s*AutoEnable\s*=.*|AutoEnable=true|' "$BTCONF" \
+            || sed -i '/^\[Policy\]/a AutoEnable=true' "$BTCONF"
+    else
+        printf '\n[Policy]\nAutoEnable=true\n' >> "$BTCONF"
+    fi
+    grep -A1 '^\[General\]' "$BTCONF" | head -6
+else
+    warn "/etc/bluetooth/main.conf introuvable."
+fi
 
 step "Interface : traduction des dernières entrées en anglais"
 # Corrige à la volée, sans dépendre des noms de fichiers, les entrées du lanceur dont la

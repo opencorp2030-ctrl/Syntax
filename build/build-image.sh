@@ -96,6 +96,31 @@ chroot "$MNT" /usr/bin/env -i HOME=/root PATH=/usr/sbin:/usr/bin:/sbin:/bin SHOT
     useradd -u 59123 -m -s /bin/bash syntaxshot && bash /tmp/headless-shot.sh syntaxshot /tmp/bureau.png 20
     pkill -u syntaxshot; sleep 1; userdel -r syntaxshot 2>/dev/null; rm -rf /run/user/* /home/syntaxshot' || echo "capture du bureau impossible"
 cp "$MNT"/tmp/bureau*.png "$OUT/" 2>/dev/null || true
+
+step "Paquet de mise à jour légère (syntax self-update)"
+# Seuls les fichiers propres à Syntax OS (portail, bureau, icônes, services) — jamais la
+# configuration de l'utilisateur ni les applications tierces, trop volumineuses pour une
+# mise à jour quotidienne.
+UPDATE_TAR="$OUT/syntax-update-${VERSION}.tar.gz"
+( cd "$MNT" && tar -czf "$UPDATE_TAR" --owner=0 --group=0 \
+    usr/lib/syntax \
+    usr/share/syntax \
+    usr/share/themes/Syntax \
+    usr/share/icons/hicolor/scalable/apps/syntax.svg \
+    usr/share/icons/hicolor/scalable/apps/satiscode.svg \
+    usr/share/icons/hicolor/scalable/apps/satisdocs.svg \
+    usr/share/icons/hicolor/scalable/apps/satisreader.svg \
+    usr/share/icons/hicolor/scalable/apps/poly.svg \
+    etc/systemd/system/syntax-portal.service \
+    etc/systemd/system/syntax-tunnel.service \
+    etc/systemd/system/syntax-selfupdate.service \
+    etc/systemd/system/syntax-selfupdate.timer \
+    etc/pam.d/syntax-portal \
+    etc/xdg/autostart/syntax-screen.desktop \
+    2>/dev/null )
+sha256sum "$UPDATE_TAR" | awk '{print $1}' > "$UPDATE_TAR.sha256"
+ls -lh "$UPDATE_TAR"
+
 umount "$MNT/tmp/syntax-build"
 find "$MNT/tmp" -mindepth 1 -delete 2>/dev/null || true
 rm -f "$MNT/etc/resolv.conf"

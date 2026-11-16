@@ -93,6 +93,11 @@ def cmd_update(_a):
     sys.exit(subprocess.call("apt-get update && apt-get -y full-upgrade", shell=True))
 
 
+def cmd_self_update(_a):
+    need_root()
+    sys.exit(subprocess.call(["/usr/lib/syntax/selfupdate.sh"]))
+
+
 def cmd_apply(_a):
     need_root()
     lib.apply_boot_config()
@@ -116,6 +121,7 @@ def main():
     h.set_defaults(fn=cmd_headless)
     sub.add_parser("ai", help="installer Ollama pour faire tourner des modèles d'IA en local").set_defaults(fn=cmd_ai)
     sub.add_parser("update", help="mettre à jour le système").set_defaults(fn=cmd_update)
+    sub.add_parser("self-update", help="mettre à jour Syntax OS depuis la dernière version GitHub (automatique chaque jour)").set_defaults(fn=cmd_self_update)
     sub.add_parser("apply-boot-config").set_defaults(fn=cmd_apply)
     sub.add_parser("has-default-password").set_defaults(fn=cmd_guard)
     a = p.parse_args()
