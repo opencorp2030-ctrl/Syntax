@@ -29,6 +29,22 @@ step "Performance : moins de démons en arrière-plan"
 systemctl --global mask gvfs-mtp-volume-monitor.service gvfs-gphoto2-volume-monitor.service \
     gvfs-goa-volume-monitor.service gvfs-afc-volume-monitor.service 2>/dev/null || true
 
+step "Fiabilité : log2ram et journal en RAM"
+# Les journaux système réécrivent sans arrêt sur la carte SD, qui s'use et finit par lâcher.
+# log2ram déplace /var/log en RAM (recopié sur la carte seulement une fois par jour, et
+# proprement à l'extinction) ; le journal systemd est lui aussi gardé en mémoire plutôt
+# que sur disque.
+git clone --quiet --depth 1 https://github.com/azlux/log2ram /tmp/log2ram \
+    && (cd /tmp/log2ram && sed -i 's/^SIZE=.*/SIZE=64M/' log2ram.conf && bash install.sh) \
+    && rm -rf /tmp/log2ram \
+    || warn "log2ram non installé"
+mkdir -p /etc/systemd/journald.conf.d
+cat > /etc/systemd/journald.conf.d/syntax-volatile.conf <<'J'
+[Journal]
+Storage=volatile
+RuntimeMaxUse=48M
+J
+
 apt-get install -y --no-install-recommends \
     waybar fuzzel mako-notifier fonts-inter fonts-font-awesome papirus-icon-theme \
     network-manager-applet blueman pavucontrol swaybg wl-clipboard grim slurp wlr-randr \
@@ -214,6 +230,7 @@ subs = [
     (r'command="wfpanelctl netman menu"', 'command="nm-connection-editor"'),
     (r'command="wfpanelctl bluetooth menu"', 'command="blueman-manager"'),
     (r'command="pishutdown"', 'command="/usr/share/syntax/desktop/bin/power-menu"'),
+    (r'command="swaylock -p"', 'command="swaylock -f -i /usr/share/syntax/wallpaper.jpg --scaling fill -c 101014"'),
 ]
 for pat, rep in subs:
     s, n = re.subn(pat, rep, s)
@@ -264,6 +281,25 @@ if [ -f /usr/share/applications/foot.desktop ]; then
         > /usr/local/share/applications/foot.desktop
 fi
 ls /usr/share/applications | tr '\n' ' '; echo
+
+step "Interface : traduction des dernières entrées en anglais"
+# Corrige à la volée, sans dépendre des noms de fichiers, les entrées du lanceur dont la
+# traduction française manque encore dans l'image de base.
+declare -A FR_NAMES=(
+    ["Add / Remove Software"]="Ajouter / Supprimer des logiciels"
+    ["Accessories"]="Accessoires"
+    ["Preferences"]="Préférences"
+)
+for f in /usr/share/applications/*.desktop; do
+    [ -f "$f" ] || continue
+    EN="$(grep -m1 '^Name=' "$f" | cut -d= -f2-)"
+    FR="${FR_NAMES[$EN]:-}"
+    [ -n "$FR" ] || continue
+    grep -q '^Name\[fr\]=' "$f" && continue
+    BASE="$(basename "$f")"
+    sed "/^Name=/a Name[fr]=$FR" "$f" > "/usr/local/share/applications/$BASE"
+    echo "traduit : $EN -> $FR ($BASE)"
+done
 
 step "Interface : bureau et écran de connexion"
 for f in /etc/xdg/pcmanfm/default/desktop-items-*.conf; do

@@ -1,8 +1,9 @@
 # Syntax OS
 
-Un système d'exploitation pour Raspberry Pi, basé sur Raspberry Pi OS 64 bits (Debian 13 « trixie »),
-orienté développement et IA, avec **Syntax Connect** : l'écran et le terminal du Pi dans ton
-navigateur, sur ton réseau local ou depuis Internet via ton propre domaine Cloudflare.
+Un système d'exploitation stable et complet pour Raspberry Pi, basé sur Raspberry Pi OS 64 bits
+(Debian 13 « trixie »), orienté développement et IA, avec **Syntax Connect** : l'écran et le
+terminal du Pi dans ton navigateur, sur ton réseau local ou depuis Internet via ton propre domaine
+Cloudflare.
 
 - **Compatible** : Raspberry Pi 5 (cible principale), Pi 4, Pi 400, Zero 2 W — noyau, firmware et
   pilotes officiels Raspberry Pi.
@@ -21,6 +22,8 @@ navigateur, sur ton réseau local ou depuis Internet via ton propre domaine Clou
   un composant JavaScript à intégrer à un site web (pas un programme à installer), et SatisTimer
   est une application Android — aucun des deux ne peut tourner comme application du bureau Syntax.
 - **Sans écran ni clavier** : flashe, branche, ouvre `http://syntax.local`.
+- **Pensé pour durer** : swap compressé en RAM, `log2ram` et journal système en RAM pour épargner
+  la carte SD de l'usure dans la durée.
 
 ## Installer
 
