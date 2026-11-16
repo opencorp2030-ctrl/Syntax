@@ -64,7 +64,7 @@ step "Interface : fichiers"
 mkdir -p /usr/share/syntax/desktop /usr/share/themes/Syntax
 cp -a "$B/desktop/bin" "$B/desktop/"*.css "$B/desktop/"*.ini "$B/desktop/"*.conf /usr/share/syntax/desktop/
 mkdir -p /usr/lib/syntax/desktop
-cp "$B/desktop/make-dock.py" "$B/desktop/dock-edit.py" /usr/lib/syntax/desktop/
+cp "$B/desktop/make-dock.py" "$B/desktop/bin/dock-edit.py" /usr/lib/syntax/desktop/
 chmod 755 /usr/lib/syntax/desktop/*.py
 cp -a "$B/desktop/theme/." /usr/share/themes/Syntax/
 cp "$B/desktop/logo-connect.svg" /usr/share/syntax/logo-connect.svg
