@@ -9,6 +9,26 @@ warn() { printf '\033[1;33mAVERTISSEMENT : %s\033[0m\n' "$*"; }
 
 step "Interface : paquets"
 apt-get update
+
+step "Performance : swap compressé en RAM (zram)"
+# Évite l'échange sur la carte SD (très lent) quand la mémoire sature avec plusieurs
+# applications ouvertes (Electron, Docker, navigateur…) : bien plus rapide, et épargne
+# la carte SD.
+apt-get install -y --no-install-recommends zram-tools
+cat > /etc/default/zramswap <<'Z'
+ALGO=zstd
+PERCENT=50
+PRIORITY=100
+Z
+systemctl enable zramswap.service
+
+step "Performance : moins de démons en arrière-plan"
+# gvfs lance un surveillant de volumes par type d'appareil ; sur un Pi, seuls les
+# disques/clés USB (udisks2) servent au quotidien. Les autres tournent en continu pour
+# rien et sont désactivés ; une clé USB normale continue de fonctionner.
+systemctl --global mask gvfs-mtp-volume-monitor.service gvfs-gphoto2-volume-monitor.service \
+    gvfs-goa-volume-monitor.service gvfs-afc-volume-monitor.service 2>/dev/null || true
+
 apt-get install -y --no-install-recommends \
     waybar fuzzel mako-notifier fonts-inter fonts-font-awesome papirus-icon-theme \
     network-manager-applet blueman pavucontrol swaybg wl-clipboard grim slurp wlr-randr \

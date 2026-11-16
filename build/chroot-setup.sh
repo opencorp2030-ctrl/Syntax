@@ -128,6 +128,10 @@ if [ -f /etc/xdg/labwc/environment ]; then
         echo 'XKB_DEFAULT_LAYOUT=fr' >> /etc/xdg/labwc/environment
     fi
 fi
+# Les applications Electron (VS Code, SatisCode, SatisDocs) doivent dessiner via le GPU
+# sous Wayland : sans cette variable, Chromium peut basculer sur un rendu logiciel
+# (swiftshader), nettement plus lent à l'ouverture sur un Pi.
+echo 'ELECTRON_OZONE_PLATFORM_HINT=auto' >> /etc/xdg/labwc/environment
 
 B="$B" bash "$B/desktop-setup.sh"
 
