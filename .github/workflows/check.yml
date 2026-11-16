@@ -1,5 +1,8 @@
 name: check-packages
 on:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/workflows/check.yml']
   workflow_dispatch:
 jobs:
   check:
