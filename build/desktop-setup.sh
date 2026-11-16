@@ -61,12 +61,14 @@ fi
 step "Applications : poly, SatisCode, SatisDocs, SatisReader"
 if [ -x "$B/apps/poly" ]; then
     cp "$B/apps/poly" /usr/bin/poly && chmod 755 /usr/bin/poly
-    "/usr/bin/poly" --version || true
+    "/usr/bin/poly" version || true
 else
     warn "poly non récupéré."
 fi
 install_electron_app() { # install_electron_app <id> <titre>
-    local id="$1" title="$2" src="$B/apps/$id"
+    local id="$1"
+    local title="$2"
+    local src="$B/apps/$id"
     [ -d "$src" ] || { warn "$title non récupéré."; return; }
     rm -rf "/opt/syntax-apps/$id"
     mkdir -p /opt/syntax-apps
