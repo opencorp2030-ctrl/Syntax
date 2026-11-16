@@ -34,10 +34,20 @@ step "Fiabilité : log2ram et journal en RAM"
 # log2ram déplace /var/log en RAM (recopié sur la carte seulement une fois par jour, et
 # proprement à l'extinction) ; le journal systemd est lui aussi gardé en mémoire plutôt
 # que sur disque.
-git clone --quiet --depth 1 https://github.com/azlux/log2ram /tmp/log2ram \
-    && (cd /tmp/log2ram && sed -i 's/^SIZE=.*/SIZE=64M/' log2ram.conf && bash install.sh) \
-    && rm -rf /tmp/log2ram \
-    || warn "log2ram non installé"
+if git clone --quiet --depth 1 https://github.com/azlux/log2ram /tmp/log2ram; then
+    (
+        cd /tmp/log2ram
+        install -m 644 log2ram.service log2ram-daily.service /etc/systemd/system/
+        install -m 644 log2ram-daily.timer /etc/systemd/system/
+        install -m 755 log2ram /usr/local/bin/log2ram
+        sed 's/^SIZE=.*/SIZE=64M/' log2ram.conf > /etc/log2ram.conf
+        [ -d /etc/logrotate.d ] && install -m 644 log2ram.logrotate /etc/logrotate.d/log2ram
+    )
+    systemctl enable log2ram.service log2ram-daily.timer
+    rm -rf /tmp/log2ram
+else
+    warn "log2ram non récupéré."
+fi
 mkdir -p /etc/systemd/journald.conf.d
 cat > /etc/systemd/journald.conf.d/syntax-volatile.conf <<'J'
 [Journal]
