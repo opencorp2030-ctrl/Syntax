@@ -26,12 +26,16 @@ jobs:
       - name: Outils
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends xz-utils parted e2fsprogs dosfstools librsvg2-bin fonts-inter fonts-dejavu-core file
+          sudo apt-get install -y --no-install-recommends xz-utils parted e2fsprogs dosfstools librsvg2-bin fonts-inter fonts-dejavu-core file \
+            golang-go build-essential python3
+          curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+          sudo apt-get install -y --no-install-recommends nodejs
+          node -v; npm -v; go version
           df -h /
       - name: Tests du portail
         run: |
           python3 -m py_compile system/syntaxlib.py system/cli.py system/portal/server.py system/portal/pamauth.py
-          bash -n build/build-image.sh && bash -n build/chroot-setup.sh
+          bash -n build/build-image.sh && bash -n build/chroot-setup.sh && bash -n build/fetch-apps.sh && bash -n build/desktop-setup.sh
           for f in system/libexec/*; do sh -n "$f"; done
       - name: Construction de l'image
         run: |

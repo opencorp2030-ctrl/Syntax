@@ -12,7 +12,7 @@ apt-get update
 apt-get install -y --no-install-recommends \
     waybar fuzzel mako-notifier fonts-inter fonts-font-awesome papirus-icon-theme \
     network-manager-applet blueman pavucontrol swaybg wl-clipboard grim slurp wlr-randr \
-    libglib2.0-bin cpio foot fonts-jetbrains-mono
+    libglib2.0-bin cpio foot fonts-jetbrains-mono php-cli
 
 step "Interface : fichiers"
 mkdir -p /usr/share/syntax/desktop /usr/share/themes/Syntax
@@ -22,35 +22,136 @@ cp "$B/desktop/logo-connect.svg" /usr/share/syntax/logo-connect.svg
 cp "$B/system/portal/static/logo.svg" /usr/share/syntax/logo.svg
 cp "$B/wallpaper.jpg" /usr/share/syntax/wallpaper.jpg
 cp "$B/logo.png" /usr/share/syntax/logo.png
+mkdir -p /usr/share/icons/hicolor/scalable/apps
+cp "$B"/desktop/icons/*.svg /usr/share/icons/hicolor/scalable/apps/
 chmod 755 /usr/share/syntax/desktop/bin/*
 mkdir -p /etc/xdg/foot && cp "$B/desktop/foot.ini" /etc/xdg/foot/foot.ini
 update-alternatives --set x-terminal-emulator /usr/bin/foot 2>/dev/null \
     || update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator /usr/bin/foot 60
+
+step "Police d'affichage : Space Grotesk (titres, logo)"
+if [ -f "$B/apps/fonts/SpaceGrotesk.ttf" ]; then
+    mkdir -p /usr/share/fonts/truetype/syntax
+    cp "$B/apps/fonts/SpaceGrotesk.ttf" /usr/share/fonts/truetype/syntax/SpaceGrotesk.ttf
+    [ -f "$B/apps/fonts/SpaceGrotesk-OFL.txt" ] && cp "$B/apps/fonts/SpaceGrotesk-OFL.txt" /usr/share/fonts/truetype/syntax/LICENSE.txt
+    mkdir -p /usr/lib/syntax/portal/static/fonts
+    cp "$B/apps/fonts/SpaceGrotesk.ttf" /usr/lib/syntax/portal/static/fonts/SpaceGrotesk.ttf
+    fc-cache -f /usr/share/fonts/truetype/syntax >/dev/null
+else
+    warn "Space Grotesk non récupérée : les titres resteront en Inter."
+fi
+
+step "Curseur : Bibata-Modern-Classic"
+if [ -d "$B/apps/cursor/Bibata-Modern-Classic" ]; then
+    cp -a "$B/apps/cursor/Bibata-Modern-Classic" /usr/share/icons/Bibata-Modern-Classic
+    CURSOR_THEME=Bibata-Modern-Classic
+else
+    warn "Bibata non récupéré : curseur Adwaita conservé."
+    CURSOR_THEME=Adwaita
+fi
+
+step "Icônes : dossiers Papirus recolorés"
+if [ -x "$B/apps/papirus-folders" ]; then
+    "$B/apps/papirus-folders" -t Papirus -C orange || warn "papirus-folders (Papirus) a échoué"
+    "$B/apps/papirus-folders" -t Papirus-Dark -C orange || warn "papirus-folders (Papirus-Dark) a échoué"
+else
+    warn "papirus-folders non récupéré : dossiers bleus par défaut."
+fi
+
+step "Applications : poly, SatisCode, SatisDocs, SatisReader"
+if [ -x "$B/apps/poly" ]; then
+    cp "$B/apps/poly" /usr/bin/poly && chmod 755 /usr/bin/poly
+    "/usr/bin/poly" --version || true
+else
+    warn "poly non récupéré."
+fi
+install_electron_app() { # install_electron_app <id> <titre>
+    local id="$1" title="$2" src="$B/apps/$id"
+    [ -d "$src" ] || { warn "$title non récupéré."; return; }
+    rm -rf "/opt/syntax-apps/$id"
+    mkdir -p /opt/syntax-apps
+    cp -a "$src" "/opt/syntax-apps/$id"
+    chmod 755 "/opt/syntax-apps/$id/$id"
+    if [ -f "/opt/syntax-apps/$id/chrome-sandbox" ]; then
+        chown root:root "/opt/syntax-apps/$id/chrome-sandbox"
+        chmod 4755 "/opt/syntax-apps/$id/chrome-sandbox"
+    fi
+    cat > "/usr/share/applications/$id.desktop" <<DESK
+[Desktop Entry]
+Type=Application
+Name=$title
+Exec=/opt/syntax-apps/$id/$id %U
+Icon=$id
+Categories=Development;
+DESK
+}
+install_electron_app satiscode "SatisCode"
+install_electron_app satisdocs "SatisDocs"
+
+if [ -d "$B/apps/satisreader" ]; then
+    rm -rf /usr/share/syntax/satisreader
+    cp -a "$B/apps/satisreader" /usr/share/syntax/satisreader
+    id -u satisreader >/dev/null 2>&1 || useradd --system --no-create-home --home-dir /var/lib/syntax/satisreader \
+        --shell /usr/sbin/nologin satisreader
+    mkdir -p /var/lib/syntax/satisreader
+    chown -R satisreader:satisreader /var/lib/syntax/satisreader
+    cat > /etc/systemd/system/syntax-satisreader.service <<'UNIT'
+[Unit]
+Description=Syntax OS — SatisReader (lecteur de flux RSS/Atom)
+After=network.target
+
+[Service]
+User=satisreader
+Group=satisreader
+WorkingDirectory=/var/lib/syntax/satisreader
+ExecStart=/usr/bin/php -S 127.0.0.1:8092 -t /usr/share/syntax/satisreader
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/syntax/satisreader
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+    systemctl enable syntax-satisreader.service
+    cat > /usr/share/applications/satisreader.desktop <<'DESK'
+[Desktop Entry]
+Type=Application
+Name=SatisReader
+Exec=xdg-open http://127.0.0.1:8092/
+Icon=satisreader
+Categories=Network;News;
+DESK
+else
+    warn "SatisReader non récupéré."
+fi
+
 python3 "$B/desktop/make-dock.py" /usr/share/syntax/desktop/waybar.json
 
 step "Interface : thème, polices, icônes"
-cat > /usr/share/glib-2.0/schemas/90_syntax.gschema.override <<'G'
+cat > /usr/share/glib-2.0/schemas/90_syntax.gschema.override <<G
 [org.gnome.desktop.interface]
 gtk-theme='Adwaita-dark'
 icon-theme='Papirus-Dark'
-cursor-theme='Adwaita'
+cursor-theme='$CURSOR_THEME'
 font-name='Inter 11'
 document-font-name='Inter 11'
 color-scheme='prefer-dark'
 G
 glib-compile-schemas /usr/share/glib-2.0/schemas
 mkdir -p /etc/gtk-3.0
-cat > /etc/gtk-3.0/settings.ini <<'G'
+cat > /etc/gtk-3.0/settings.ini <<G
 [Settings]
 gtk-theme-name=Adwaita-dark
 gtk-icon-theme-name=Papirus-Dark
 gtk-font-name=Inter 11
-gtk-cursor-theme-name=Adwaita
+gtk-cursor-theme-name=$CURSOR_THEME
 gtk-application-prefer-dark-theme=1
 G
 LX=/etc/xdg/lxsession/rpd-labwc/desktop.conf
 for f in /etc/xdg/lxsession/*/desktop.conf; do
-    sed -i 's|^sNet/ThemeName=.*|sNet/ThemeName=Adwaita-dark|; s|^sNet/IconThemeName=.*|sNet/IconThemeName=Papirus-Dark|; s|^sGtk/FontName=.*|sGtk/FontName=Inter 11|; s|^sGtk/CursorThemeName=.*|sGtk/CursorThemeName=Adwaita|; /^sGtk\/ColorScheme=/d' "$f"
+    sed -i "s|^sNet/ThemeName=.*|sNet/ThemeName=Adwaita-dark|; s|^sNet/IconThemeName=.*|sNet/IconThemeName=Papirus-Dark|; s|^sGtk/FontName=.*|sGtk/FontName=Inter 11|; s|^sGtk/CursorThemeName=.*|sGtk/CursorThemeName=$CURSOR_THEME|; /^sGtk\/ColorScheme=/d" "$f"
 done
 # Logo du menu et du système dans le thème d'icônes d'origine (au cas où il resterait utilisé).
 for size in 16 24 32 48 64 96; do
@@ -122,7 +223,7 @@ cat > /etc/xdg/labwc/menu.xml <<'M'
   </menu>
 </openbox_menu>
 M
-sed -i 's/^XCURSOR_THEME=.*/XCURSOR_THEME=Adwaita/' /etc/xdg/labwc/environment /etc/xdg/labwc-greeter/environment 2>/dev/null || true
+sed -i "s/^XCURSOR_THEME=.*/XCURSOR_THEME=$CURSOR_THEME/" /etc/xdg/labwc/environment /etc/xdg/labwc-greeter/environment 2>/dev/null || true
 # Les applets réseau / Bluetooth sont lancés par session-start (mode zone de notification).
 for f in /etc/xdg/autostart/nm-applet.desktop /etc/xdg/autostart/blueman.desktop; do
     [ -f "$f" ] && { grep -q '^Hidden=' "$f" || echo 'Hidden=true' >> "$f"; }

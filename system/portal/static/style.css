@@ -1,14 +1,20 @@
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("/static/fonts/SpaceGrotesk.ttf") format("truetype");
+  font-weight: 300 700;
+  font-display: swap;
+}
 :root {
-  --bg: #f5f5f7; --card: #ffffff; --text: #1d1d1f; --muted: #6e6e73; --line: #d2d2d7;
-  --accent: #0071e3; --accent-text: #ffffff; --danger: #d70015; --ok: #248a3d; --warn: #b25000;
+  --bg: #f3f1ec; --card: #ffffff; --text: #17191b; --muted: #6c6560; --line: #ddd7cc;
+  --accent: #e05a28; --accent-text: #ffffff; --danger: #d6315a; --ok: #1d9a6c; --warn: #b25000;
   --field: #ffffff; --shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
   --radius: 18px;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #000000; --card: #1c1c1e; --text: #f5f5f7; --muted: #98989d; --line: #38383a;
-    --accent: #0a84ff; --danger: #ff453a; --ok: #30d158; --warn: #ff9f0a;
-    --field: #2c2c2e; --shadow: none;
+    --bg: #0a0c0e; --card: #1c1f22; --text: #f2f0ec; --muted: #8b9097; --line: #33383c;
+    --accent: #ff7a45; --danger: #ff5c7a; --ok: #2dd4bf; --warn: #ffc24c;
+    --field: #23272b; --shadow: none;
   }
 }
 * { box-sizing: border-box; }
@@ -19,7 +25,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 [hidden] { display: none !important; }
-h1 { font-size: 26px; font-weight: 600; letter-spacing: -.02em; margin: 8px 0 2px; }
+h1 { font-family: "Space Grotesk", "Inter", sans-serif; font-size: 26px; font-weight: 600; letter-spacing: -.01em; margin: 8px 0 2px; }
 h3 { font-size: 15px; font-weight: 600; margin: 0 0 12px; letter-spacing: -.01em; }
 h3.sep { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
 p { margin: 0 0 10px; }
@@ -59,7 +65,7 @@ label input { margin-top: 5px; }
   background: color-mix(in srgb, var(--bg) 78%, transparent); backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid var(--line);
 }
-.brand { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 17px; letter-spacing: -.02em; }
+.brand { display: flex; align-items: center; gap: 8px; font-family: "Space Grotesk", "Inter", sans-serif; font-weight: 600; font-size: 17px; letter-spacing: -.01em; }
 .brand img { width: 26px; height: 26px; }
 .brand em { font-style: normal; font-weight: 400; color: var(--muted); font-size: 13px; }
 #tabs { display: flex; gap: 2px; margin: 0 auto; background: color-mix(in srgb, var(--muted) 14%, transparent); padding: 3px; border-radius: 980px; }

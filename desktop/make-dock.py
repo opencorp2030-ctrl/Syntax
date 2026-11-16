@@ -33,6 +33,12 @@ pinned = [
 ]
 if have("code"):
     pinned.append(("code", "code", icon("visual-studio-code", "com.visualstudio.code", "vscode", "code"), "VS Code"))
+if os.path.exists("/opt/syntax-apps/satiscode/satiscode"):
+    pinned.append(("satiscode", "/opt/syntax-apps/satiscode/satiscode", icon("satiscode"), "SatisCode"))
+if os.path.exists("/opt/syntax-apps/satisdocs/satisdocs"):
+    pinned.append(("satisdocs", "/opt/syntax-apps/satisdocs/satisdocs", icon("satisdocs"), "SatisDocs"))
+if os.path.exists("/usr/share/syntax/satisreader"):
+    pinned.append(("satisreader", "xdg-open http://127.0.0.1:8092/", icon("satisreader"), "SatisReader"))
 pinned.append(("connect", "xdg-open http://localhost/", "/usr/share/syntax/logo-connect.svg", "Syntax Connect"))
 pinned.append(("settings", "rpcc", icon("preferences-system", "systemsettings", "gnome-control-center"), "Réglages"))
 

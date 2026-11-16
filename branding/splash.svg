@@ -1,20 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
   <defs>
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#7d5cff"/>
-      <stop offset="1" stop-color="#1e9bff"/>
+      <stop offset="0" stop-color="#ff7a45"/>
+      <stop offset="1" stop-color="#2dd4bf"/>
     </linearGradient>
     <radialGradient id="glow" cx=".5" cy=".46" r=".35">
-      <stop offset="0" stop-color="#4a3fd0" stop-opacity=".28"/>
+      <stop offset="0" stop-color="#ff7a45" stop-opacity=".22"/>
       <stop offset="1" stop-color="#000" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <rect width="1920" height="1080" fill="#000"/>
+  <rect width="1920" height="1080" fill="#0a0c0e"/>
   <rect width="1920" height="1080" fill="url(#glow)"/>
   <g transform="translate(880 400)">
     <rect width="160" height="160" rx="37" fill="url(#g)"/>
-    <path d="M62.500 52.500 35 80l27.500 27.500M97.500 52.500 125 80l-27.500 27.500" fill="none" stroke="#fff" stroke-width="12.500" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="80" cy="80" r="7.500" fill="#fff"/>
+    <path d="M62.500 52.500 35 80l27.500 27.500M97.500 52.500 125 80l-27.500 27.500" fill="none" stroke="#15181a" stroke-width="12.500" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="80" cy="80" r="7.500" fill="#15181a"/>
   </g>
-  <text x="960" y="640" text-anchor="middle" font-family="Inter, 'DejaVu Sans', sans-serif" font-size="40" font-weight="600" fill="#f5f5f7" letter-spacing="6">SYNTAX</text>
+  <text x="960" y="640" text-anchor="middle" font-family="Space Grotesk, Inter, 'DejaVu Sans', sans-serif" font-size="40" font-weight="600" fill="#f2f0ec" letter-spacing="6">SYNTAX</text>
 </svg>

@@ -7,9 +7,19 @@ navigateur, sur ton réseau local ou depuis Internet via ton propre domaine Clou
 - **Compatible** : Raspberry Pi 5 (cible principale), Pi 4, Pi 400, Zero 2 W — noyau, firmware et
   pilotes officiels Raspberry Pi.
 - **Interface Syntax** : dock vertical à droite de l'écran, lanceur d'applications (touche Super
-  ou logo du dock), thème sombre, terminal assorti ; en français, clavier AZERTY, fuseau Europe/Paris.
+  ou logo du dock), thème sombre et identité propre (palette ambre/sarcelle, police Space Grotesk
+  pour les titres, curseur Bibata, dossiers recolorés), terminal assorti ; en français, clavier
+  AZERTY, fuseau Europe/Paris.
 - **Outils préinstallés** : Git, Python (venv, pip, pipx), Node.js + npm, Docker, VS Code,
-  GitHub CLI, Claude Code (`claude`), cloudflared.
+  GitHub CLI, Claude Code (`claude`), cloudflared, [poly](https://github.com/opencorp2030-ctrl/poly)
+  (`poly install <paquet>`, un seul gestionnaire pour pip/npm/brew/binaires).
+- **Applications SatisCorp préinstallées** : [SatisCode](https://github.com/gtref/satiscode)
+  (éditeur C/C++/Python/JSON/XML), [SatisDocs](https://github.com/gtref/satisdocs) (visionneuse de
+  documentation Markdown) et [SatisReader](https://github.com/SatisCorprperation/satisreader)
+  (lecteur de flux RSS/Atom, servi en local sur `http://localhost:8092`).
+  Deux autres projets SatisCorp demandés ne sont pas des applications de bureau : SatisPalette est
+  un composant JavaScript à intégrer à un site web (pas un programme à installer), et SatisTimer
+  est une application Android — aucun des deux ne peut tourner comme application du bureau Syntax.
 - **Sans écran ni clavier** : flashe, branche, ouvre `http://syntax.local`.
 
 ## Installer
@@ -122,7 +132,7 @@ L'image est écrite dans `out/`.
 | `desktop/` | Interface : dock, lanceur, thème des fenêtres, terminal, notifications |
 | `branding/` | Fond d'écran et écran de démarrage |
 | `ci/` | Capture du bureau de l'image dans un compositeur sans écran |
-| `build/` | Scripts de construction de l'image |
+| `build/` | Scripts de construction de l'image, dont `fetch-apps.sh` (récupération des applications tierces) |
 
 ## Licences
 
