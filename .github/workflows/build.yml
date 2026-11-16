@@ -88,7 +88,7 @@ jobs:
           cd out
           TAG="v${VERSION}"
           FILES=(syntax-os-*.img.xz.sha256)
-          if [ "$(stat -c %s syntax-os-*.img.xz)" -gt 2000000000 ]; then
+          if [ "$(stat -c %s syntax-os-*.img.xz)" -gt 2100000000 ]; then
             split -b 1900M -d syntax-os-*.img.xz "$(ls syntax-os-*.img.xz).part"
             FILES+=(syntax-os-*.img.xz.part*)
           else
