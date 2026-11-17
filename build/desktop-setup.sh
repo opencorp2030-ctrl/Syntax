@@ -192,6 +192,16 @@ Icon=update
 Categories=System;
 DESK
 
+cat > /usr/share/applications/syntax-switch-user.desktop <<'DESK'
+[Desktop Entry]
+Type=Application
+Name=Changer d'utilisateur
+Comment=Retourne à l'écran de connexion pour choisir un autre compte
+Exec=dm-tool switch-to-greeter
+Icon=system-switch-user
+Categories=System;
+DESK
+
 python3 /usr/lib/syntax/desktop/make-dock.py /usr/share/syntax/desktop/waybar.json
 
 step "Interface : thème, polices, icônes"
@@ -286,6 +296,9 @@ cat > /etc/xdg/labwc/menu.xml <<'M'
     <item label="Réglages du bureau…">
       <action name="Execute" command="rpcc desktop" />
     </item>
+    <item label="Changer d'utilisateur">
+      <action name="Execute" command="dm-tool switch-to-greeter" />
+    </item>
   </menu>
 </openbox_menu>
 M
@@ -333,6 +346,24 @@ BT
     echo "--- $BTCONF (fin)"; tail -n 12 "$BTCONF"
 else
     warn "/etc/bluetooth/main.conf introuvable."
+fi
+
+# Deuxième piste, distincte de la précédente : certains périphériques classiques
+# (BR/EDR, pas BLE) se connectent mais n'envoient aucun mouvement parce que BlueZ
+# utilise le pilote HID du noyau (hidp) au lieu du mode « uHID » userspace pour ce
+# périphérique — symptôme identique : connecté, curseur immobile. UserspaceHID
+# (plugin input de BlueZ, fichier séparé de main.conf) force le mode userspace.
+INCONF=/etc/bluetooth/input.conf
+if [ -f "$INCONF" ]; then
+    cat >> "$INCONF" <<'BT'
+
+# --- Syntax OS : pilote HID en espace utilisateur (uHID) plutôt que le pilote noyau ---
+[General]
+UserspaceHID=true
+BT
+    echo "--- $INCONF (fin)"; tail -n 6 "$INCONF"
+else
+    warn "/etc/bluetooth/input.conf introuvable."
 fi
 
 step "Interface : traduction des dernières entrées en anglais"

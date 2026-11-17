@@ -1,0 +1,14 @@
+// Les comptes administrateur de Syntax OS (groupe "sudo") n'ont pas besoin de retaper
+// leur mot de passe pour deux actions précises et sans risque : changer le dock et
+// lancer la mise à jour de Syntax OS. Tout le reste (y compris pkexec en général)
+// continue de demander une authentification normale.
+polkit.addRule(function(action, subject) {
+    var id = action.id;
+    if (id != "org.syntax.dockapply" && id != "org.syntax.selfupdate") {
+        return polkit.Result.NOT_HANDLED;
+    }
+    if (subject.isInGroup("sudo")) {
+        return polkit.Result.YES;
+    }
+    return polkit.Result.NOT_HANDLED;
+});

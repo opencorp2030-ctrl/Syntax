@@ -68,6 +68,8 @@ def default_items():
                   "icon_hint": ["preferences-desktop", "dock"]})
     items.append({"id": "settings", "label": "Réglages système", "exec": "rpcc",
                   "icon_hint": ["preferences-system", "systemsettings", "gnome-control-center"]})
+    items.append({"id": "switch-user", "label": "Changer d'utilisateur", "exec": "dm-tool switch-to-greeter",
+                  "icon_hint": ["system-switch-user", "system-users"]})
     return items
 
 

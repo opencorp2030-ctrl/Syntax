@@ -77,10 +77,9 @@ echo "syntax:$HASH" > /usr/lib/syntax/userconf.txt
 FIRST="$(getent passwd 1000 | cut -d: -f1)"
 echo "Premier utilisateur de l'image : $FIRST"
 getent group docker >/dev/null && usermod -aG docker "$FIRST" || true
-# Ouverture automatique de la session graphique : indispensable pour voir le bureau
-# à distance sur un Pi sans écran ni clavier (lu par cancel-rename au premier démarrage).
-ls -la /var/lib/userconf-pi 2>/dev/null || true
-mkdir -p /var/lib/userconf-pi && touch /var/lib/userconf-pi/autologin
+# L'ouverture automatique de la session graphique au tout premier démarrage (pour voir
+# le bureau à distance sur un Pi sans écran ni clavier) est gérée par syntax-autologin.service,
+# pas par le marqueur permanent de userconf-pi : voir system/libexec/autologin-policy.
 
 step "Identité du système"
 dpkg-divert --quiet --add --no-rename --divert /usr/lib/os-release.debian /usr/lib/os-release
@@ -145,7 +144,7 @@ else
 fi
 
 step "Services"
-systemctl enable syntax-portal.service syntax-setup.service syntax-userguard.service syntax-selfupdate.timer
+systemctl enable syntax-portal.service syntax-setup.service syntax-userguard.service syntax-selfupdate.timer syntax-autologin.service
 systemctl enable avahi-daemon.service 2>/dev/null || true
 systemctl disable syntax-tunnel.service 2>/dev/null || true
 systemctl disable cloudflared.service 2>/dev/null || true

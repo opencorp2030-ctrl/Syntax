@@ -472,11 +472,19 @@ async def ws_screen(request):
     path = screen_socket(request["session"]["user"])
     ws = web.WebSocketResponse(protocols=("binary",), heartbeat=30, max_msg_size=8 << 20)
     await ws.prepare(request)
-    try:
-        reader, writer = await asyncio.open_unix_connection(path)
-    except OSError:
-        await ws.close(code=1011, message="Session graphique indisponible".encode())
-        return ws
+    reader = writer = None
+    # wayvnc démarre en quelques secondes après l'ouverture de la session graphique
+    # (connexion automatique, ou juste après avoir choisi son compte à l'écran de
+    # connexion) : on retente un peu avant d'afficher « indisponible ».
+    for attempt in range(10):
+        try:
+            reader, writer = await asyncio.open_unix_connection(path)
+            break
+        except OSError:
+            if attempt == 9:
+                await ws.close(code=1011, message="Session graphique indisponible".encode())
+                return ws
+            await asyncio.sleep(0.5)
 
     async def vnc_to_ws():
         try:

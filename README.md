@@ -29,8 +29,11 @@ Cloudflare.
   l'image ni toucher à tes données.
 - **Application de mise à jour** : icône « Mise à jour Syntax » dans le dock, pour lancer la
   vérification et l'installation sans passer par le terminal.
-- **Plusieurs comptes** : crée d'autres comptes (administrateur ou non) depuis l'onglet Comptes
-  du portail, chacun avec son mot de passe, comme les profils utilisateurs sur un PC.
+- **Plusieurs comptes, écran de connexion** : crée d'autres comptes (administrateur ou non)
+  depuis l'onglet Comptes du portail. Dès qu'un vrai moniteur est branché, l'écran de connexion
+  Syntax (comptes avec photo, un clic, mot de passe) permet de choisir lequel ouvrir — comme sur
+  Windows ; « Changer d'utilisateur » y ramène à tout moment. Sans moniteur, la connexion reste
+  automatique pour que le Pi reste joignable par Syntax Connect dès le premier démarrage.
 - **Dock personnalisable** : change la taille des icônes, ajoute ou retire des applications,
   change leur ordre — clic droit sur une icône du dock, ou lance « Réglages du dock ».
 
@@ -121,12 +124,25 @@ syntax update               # met à jour le système
 syntax self-update           # applique la dernière version de Syntax OS (automatique chaque jour)
 ```
 
-## Utilisation sans moniteur
+## Écran de connexion et comptes multiples
 
-Sans moniteur branché, le bureau démarre sur une sortie de secours fournie par labwc et
-reste visible dans l'onglet *Écran* — automatiquement, sans aucun réglage à faire. Cette
-sortie de secours ne s'active que lorsqu'il n'y a vraiment aucun écran ; dès qu'un vrai
-moniteur est branché, c'est lui qui est utilisé.
+Dès qu'un vrai moniteur est branché, le Pi démarre sur l'écran de connexion Syntax :
+un compte par photo, un clic, puis le mot de passe — crée les comptes depuis l'onglet
+*Comptes* du portail. « Changer d'utilisateur » (menu du bureau — clic droit sur le
+fond d'écran — ou icône du dock) y ramène sans redémarrer, pour passer d'un compte à
+l'autre sur le même poste.
+
+Sans moniteur branché, la connexion reste automatique sur le premier compte : c'est ce
+qui permet à un Pi sans écran ni clavier de rester joignable par Syntax Connect dès le
+premier démarrage, sans que personne n'ait jamais pu taper de mot de passe dessus. Ce
+choix se refait à chaque démarrage selon ce qui est détecté sur les sorties vidéo — pas
+besoin de réglage, ni d'y repenser en branchant ou débranchant un écran.
+
+Les actions sans risque qui demandaient pkexec (changer le dock, lancer la mise à jour)
+ne redemandent plus le mot de passe pour un compte administrateur ; les comptes non
+administrateurs continuent d'en avoir besoin.
+
+## Utilisation sans moniteur
 
 Les versions 1.1 et 1.2 proposaient un réglage « écran virtuel forcé » qui imposait un
 mode vidéo fixe sur le port HDMI 0. Il a été retiré en 1.3 : ce mode restait actif même
