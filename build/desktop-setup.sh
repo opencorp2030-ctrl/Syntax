@@ -408,7 +408,11 @@ done
 step "Interface : bureau et écran de connexion"
 for f in /etc/xdg/pcmanfm/default/desktop-items-*.conf; do
     [ -f "$f" ] || continue
-    sed -i 's|^wallpaper=.*|wallpaper=/usr/share/syntax/wallpaper.jpg|; s|^wallpaper_mode=.*|wallpaper_mode=crop|; s|^desktop_bg=.*|desktop_bg=#0a0c14|; s|^desktop_fg=.*|desktop_fg=#f5f5f7|; s|^desktop_shadow=.*|desktop_shadow=#000000|; s|^desktop_font=.*|desktop_font=Inter 11|; s|^show_trash=.*|show_trash=0|' "$f"
+    sed -i 's|^wallpaper=.*|wallpaper=/usr/share/syntax/wallpaper.jpg|; s|^wallpaper_mode=.*|wallpaper_mode=crop|; s|^desktop_bg=.*|desktop_bg=#0a0c14|; s|^desktop_fg=.*|desktop_fg=#f5f5f7|; s|^desktop_shadow=.*|desktop_shadow=#000000|; s|^desktop_font=.*|desktop_font=Inter 11|; s|^show_trash=.*|show_trash=0|; s|^show_documents=.*|show_documents=1|' "$f"
+    # Raspberry Pi OS désactive les icônes de bureau par défaut sous labwc (pas de clé
+    # show_documents du tout) : on l'ajoute si elle manque, pour que glisser un fichier
+    # ou un raccourci sur le bureau l'affiche réellement comme une icône.
+    grep -q '^show_documents=' "$f" || echo 'show_documents=1' >> "$f"
 done
 G=/etc/lightdm/pi-greeter.conf
 if [ -f "$G" ]; then

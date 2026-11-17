@@ -39,8 +39,13 @@ Cloudflare.
 - **Réglages Syntax** : clavier, fond d'écran, diagnostic Bluetooth en un clic, et le reste,
   dans une fenêtre à nous plutôt que le panneau générique Raspberry Pi (toujours disponible
   sous son vrai nom pour les réglages avancés : overclock, caméra, GPIO…).
-- **Marche/Arrêt** : une icône du dock ouvre le menu redémarrer / éteindre / se déconnecter,
-  comme sur Windows. Après une mise à jour, le Pi redémarre tout seul pour l'appliquer.
+- **Menu Démarrer** : le logo du dock (ou la touche Super) ouvre une fenêtre avec les
+  applications récentes, Marche/Arrêt et Changer d'utilisateur, puis toutes les
+  applications — comme le menu Démarrer de Windows, en liste filtrable plutôt qu'en
+  grille d'icônes. Après une mise à jour, le Pi redémarre tout seul pour l'appliquer.
+- **Icônes de bureau** : glisse un fichier sur le bureau, ou clic droit → Créer un nouveau.
+  Le dock (waybar), en revanche, ne prend pas en charge le glisser-déposer d'icônes —
+  utilise Réglages du dock pour ajouter, retirer ou réorganiser.
 
 ## Le dock
 
