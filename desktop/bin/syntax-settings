@@ -166,7 +166,7 @@ function showPanel(id){
   document.querySelectorAll(".rs-panel").forEach(p => p.classList.toggle("on", p.dataset.panel === id));
   document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("on", b.dataset.id === id));
 }
-showPanel("clavier");
+showPanel(new URLSearchParams(location.search).get("tab") || "clavier");
 
 const kbdGrid = document.getElementById("kbd-grid");
 KEYBOARDS.forEach(([code, name]) => {
@@ -345,8 +345,10 @@ def main():
         cleanup()
         return
 
+    tab = sys.argv[1] if len(sys.argv) > 1 else ""
+    url = f"http://127.0.0.1:{port}/" + (f"?tab={tab}" if tab else "")
     proc = subprocess.Popen([
-        browser, f"--app=http://127.0.0.1:{port}/",
+        browser, f"--app={url}",
         "--class=syntax-settings", "--window-size=620,720",
         "--disable-extensions", "--no-first-run",
     ])

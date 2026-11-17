@@ -306,6 +306,9 @@ cat > /etc/xdg/labwc/menu.xml <<'M'
     <item label="Réglages Syntax…">
       <action name="Execute" command="/usr/share/syntax/desktop/bin/syntax-settings" />
     </item>
+    <item label="Changer le fond d'écran…">
+      <action name="Execute" command="/usr/share/syntax/desktop/bin/syntax-settings fond" />
+    </item>
     <item label="Configuration Raspberry Pi (avancé)…">
       <action name="Execute" command="rpcc" />
     </item>
