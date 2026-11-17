@@ -1,0 +1,70 @@
+#!/bin/bash
+# Réglages Syntax OS : une fenêtre à nous, pas le panneau « Raspberry Pi Configuration ».
+# Les réglages avancés et spécifiques au matériel (overclock, caméra, GPIO…) restent
+# accessibles via « Configuration Raspberry Pi (avancé) » dans le lanceur.
+set -u
+ICON=/usr/share/syntax/logo.png
+zq() { zenity --window-icon="$ICON" "$@" 2>/dev/null; }
+
+keyboard() {
+    L="$(zq --list --title="Clavier" --width=360 --height=300 --hide-header \
+        --column="Disposition" "Français (AZERTY)" "Anglais (QWERTY)" "Suisse" "Belge")"
+    case "$L" in
+        "Français"*) K=fr ;; "Anglais"*) K=gb ;; "Suisse"*) K=ch ;; "Belge"*) K=be ;; *) return ;;
+    esac
+    pkexec /usr/lib/syntax/libexec/syntax-settings-apply keyboard "$K"
+}
+
+wallpaper() {
+    F="$(zq --file-selection --title="Choisir un fond d'écran" \
+        --filename=/usr/share/syntax/wallpapers/)"
+    [ -n "$F" ] || return
+    pkexec /usr/lib/syntax/libexec/syntax-settings-apply wallpaper "$F"
+}
+
+about() {
+    V="$(cat /usr/lib/syntax/version 2>/dev/null || echo inconnue)"
+    zq --info --width=360 --title="À propos" \
+        --text="Syntax OS $V\n\nhttps://github.com/opencorp2030-ctrl/Syntax"
+}
+
+bluetooth_diag() {
+    OUT="$(mktemp /tmp/syntax-bt-diag-XXXX.txt)"
+    {
+        echo "=== systemctl status bluetooth ==="
+        systemctl status bluetooth --no-pager 2>&1
+        echo
+        echo "=== bluetoothctl devices ==="
+        bluetoothctl devices 2>&1
+        echo
+        for mac in $(bluetoothctl devices 2>/dev/null | awk '{print $2}'); do
+            echo "=== bluetoothctl info $mac ==="
+            bluetoothctl info "$mac" 2>&1
+            echo
+        done
+        echo "=== journalctl -u bluetooth (lignes HID/input, 60 dernières) ==="
+        journalctl -u bluetooth --no-pager -n 300 2>&1 | grep -i "hid\|input\|hog" | tail -60
+    } > "$OUT"
+    command -v wl-copy >/dev/null && wl-copy < "$OUT" 2>/dev/null && COPIED=1 || COPIED=0
+    zq --text-info --title="Diagnostic Bluetooth" --width=640 --height=440 --filename="$OUT" \
+        --ok-label="Fermer" &
+    if [ "$COPIED" = 1 ]; then
+        zq --info --width=380 --text="Copié dans le presse-papiers (Ctrl+V pour le coller où tu veux l'envoyer)."
+    fi
+}
+
+while true; do
+    A="$(zq --list --title="Réglages Syntax" --width=380 --height=370 --hide-header \
+        --column="Action" "Clavier" "Fond d'écran" "Comptes (ouvre Syntax Connect)" \
+        "Mise à jour" "Réglages du dock" "Diagnostic Bluetooth" "À propos" "Fermer")"
+    case "$A" in
+        "Clavier") keyboard ;;
+        "Fond d'écran") wallpaper ;;
+        "Comptes"*) xdg-open "http://localhost/#accounts" ;;
+        "Mise à jour") /usr/share/syntax/desktop/bin/update-app ;;
+        "Réglages du dock") /usr/share/syntax/desktop/bin/dock-settings ;;
+        "Diagnostic Bluetooth") bluetooth_diag ;;
+        "À propos") about ;;
+        *) break ;;
+    esac
+done

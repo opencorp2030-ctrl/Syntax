@@ -77,6 +77,7 @@ echo "syntax:$HASH" > /usr/lib/syntax/userconf.txt
 FIRST="$(getent passwd 1000 | cut -d: -f1)"
 echo "Premier utilisateur de l'image : $FIRST"
 getent group docker >/dev/null && usermod -aG docker "$FIRST" || true
+getent group systemd-journal >/dev/null && usermod -aG systemd-journal "$FIRST" || true
 # L'ouverture automatique de la session graphique au tout premier démarrage (pour voir
 # le bureau à distance sur un Pi sans écran ni clavier) est gérée par syntax-autologin.service,
 # pas par le marqueur permanent de userconf-pi : voir system/libexec/autologin-policy.

@@ -1,0 +1,30 @@
+#!/bin/sh
+# Appelé via pkexec par desktop/bin/syntax-settings. Deux actions seulement,
+# chacune à son propre chemin exact (voir org.syntax.settingsapply.policy) :
+# changer la disposition du clavier, ou le fond d'écran du bureau.
+set -e
+[ "$(id -u)" -eq 0 ] || { echo "Doit être lancé en root (pkexec)." >&2; exit 1; }
+ACTION="$1"
+ARG="${2:-}"
+
+case "$ACTION" in
+    keyboard)
+        case "$ARG" in fr|gb|ch|be) ;; *) echo "Disposition inconnue." >&2; exit 1 ;; esac
+        sed -i "s/^XKBLAYOUT=.*/XKBLAYOUT=\"$ARG\"/" /etc/default/keyboard
+        sed -i "s/^XKB_DEFAULT_LAYOUT=.*/XKB_DEFAULT_LAYOUT=$ARG/" /etc/xdg/labwc/environment /etc/xdg/labwc-greeter/environment 2>/dev/null || true
+        setupcon --force 2>/dev/null || true
+        ;;
+    wallpaper)
+        [ -n "$ARG" ] && [ -f "$ARG" ] || { echo "Fichier introuvable." >&2; exit 1; }
+        case "$ARG" in /usr/share/syntax/wallpapers/*) ;; *) echo "Dossier non autorisé." >&2; exit 1 ;; esac
+        cp "$ARG" /usr/share/syntax/wallpaper.jpg
+        for u in /run/user/*; do
+            uid="${u##*/}"
+            sudo -u "#$uid" env XDG_RUNTIME_DIR="$u" pcmanfm --reconfigure >/dev/null 2>&1 || true
+        done
+        ;;
+    *)
+        echo "Action inconnue." >&2
+        exit 1
+        ;;
+esac

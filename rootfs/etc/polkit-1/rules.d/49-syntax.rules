@@ -4,7 +4,7 @@
 // continue de demander une authentification normale.
 polkit.addRule(function(action, subject) {
     var id = action.id;
-    if (id != "org.syntax.dockapply" && id != "org.syntax.selfupdate") {
+    if (id != "org.syntax.dockapply" && id != "org.syntax.selfupdate" && id != "org.syntax.settingsapply") {
         return polkit.Result.NOT_HANDLED;
     }
     if (subject.isInGroup("sudo")) {

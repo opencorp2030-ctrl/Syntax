@@ -94,4 +94,7 @@ fc-cache -f /usr/share/fonts/truetype/syntax >/dev/null 2>&1 || true
 
 log "Mise à jour vers $LATEST appliquée."
 log "=== Terminé ==="
-notify "Mise à jour installée : Syntax OS $LATEST. Reconnecte-toi pour voir tous les changements."
+notify "Mise à jour installée : Syntax OS $LATEST. Redémarrage dans 20 secondes."
+log "Redémarrage dans 20 secondes pour appliquer entièrement la mise à jour."
+setsid sh -c 'sleep 20; systemctl reboot' >/dev/null 2>&1 &
+disown 2>/dev/null || true

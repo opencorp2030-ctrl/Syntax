@@ -66,10 +66,13 @@ def default_items():
                   "icon_hint": ["update"]})
     items.append({"id": "dock-settings", "label": "Réglages du dock", "exec": "/usr/share/syntax/desktop/bin/dock-settings",
                   "icon_hint": ["preferences-desktop", "dock"]})
-    items.append({"id": "settings", "label": "Réglages système", "exec": "rpcc",
+    items.append({"id": "settings", "label": "Réglages Syntax", "exec": "/usr/share/syntax/desktop/bin/syntax-settings",
                   "icon_hint": ["preferences-system", "systemsettings", "gnome-control-center"]})
     items.append({"id": "switch-user", "label": "Changer d'utilisateur", "exec": "dm-tool switch-to-greeter",
                   "icon_hint": ["system-switch-user", "system-users"]})
+    if have("lxsession-logout"):
+        items.append({"id": "power", "label": "Marche/Arrêt", "exec": "lxsession-logout",
+                      "icon_hint": ["system-shutdown", "system-log-out"]})
     return items
 
 

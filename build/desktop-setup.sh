@@ -192,6 +192,16 @@ Icon=update
 Categories=System;
 DESK
 
+cat > /usr/share/applications/syntax-settings.desktop <<'DESK'
+[Desktop Entry]
+Type=Application
+Name=Réglages Syntax
+Comment=Clavier, fond d'écran, comptes, mise à jour, dock
+Exec=/usr/share/syntax/desktop/bin/syntax-settings
+Icon=preferences-system
+Categories=System;
+DESK
+
 cat > /usr/share/applications/syntax-switch-user.desktop <<'DESK'
 [Desktop Entry]
 Type=Application
@@ -293,8 +303,11 @@ cat > /etc/xdg/labwc/menu.xml <<'M'
     <item label="Fichiers">
       <action name="Execute" command="pcmanfm" />
     </item>
-    <item label="Réglages du bureau…">
-      <action name="Execute" command="rpcc desktop" />
+    <item label="Réglages Syntax…">
+      <action name="Execute" command="/usr/share/syntax/desktop/bin/syntax-settings" />
+    </item>
+    <item label="Configuration Raspberry Pi (avancé)…">
+      <action name="Execute" command="rpcc" />
     </item>
     <item label="Changer d'utilisateur">
       <action name="Execute" command="dm-tool switch-to-greeter" />
@@ -312,10 +325,17 @@ step "Interface : lanceur sans entrées techniques ou en double"
 apt-get -s purge rp-bookshelf 2>/dev/null | grep -c '^Purg' | { read -r n; [ "${n:-9}" -le 2 ] && apt-get purge -y rp-bookshelf >/dev/null 2>&1 || true; }
 mkdir -p /usr/local/share/applications
 for app in userguide gui-runcmd wf-panel-pi openbox org.freedesktop.Xwayland notification-daemon \
-           lxsession-logout pishutdown lxterminal foot-server footclient; do
+           pishutdown lxterminal foot-server footclient; do
     [ -f "/usr/share/applications/$app.desktop" ] || continue
     printf '[Desktop Entry]\nType=Application\nName=%s\nNoDisplay=true\n' "$app" > "/usr/local/share/applications/$app.desktop"
 done
+# lxsession-logout fournit déjà, tout fait et testé par Raspberry Pi OS, le menu
+# « redémarrer / éteindre / se déconnecter » façon Windows — on le garde, juste
+# rebaptisé et affiché dans le dock, plutôt que d'en réécrire un à la main.
+if [ -f /usr/share/applications/lxsession-logout.desktop ]; then
+    printf '[Desktop Entry]\nType=Application\nName=Marche/Arrêt\nComment=Redémarrer, éteindre ou se déconnecter\nExec=lxsession-logout\nIcon=system-shutdown\nCategories=System;\n' \
+        > /usr/local/share/applications/lxsession-logout.desktop
+fi
 if [ -f /usr/share/applications/foot.desktop ]; then
     sed 's/^Name=.*/Name=Terminal/; /^Name\[/d; s/^GenericName=.*/GenericName=Terminal/' /usr/share/applications/foot.desktop \
         > /usr/local/share/applications/foot.desktop

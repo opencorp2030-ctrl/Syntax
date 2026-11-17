@@ -23,7 +23,7 @@ kill "$ZPID" 2>/dev/null
 
 if [ "$RC" -eq 0 ]; then
     zenity --info --title="Mise à jour Syntax OS" --window-icon="$ICON" --width=380 \
-        --text="Terminé.\n\n$(tail -4 "$LOG")"
+        --text="Mise à jour terminée. Le Pi va redémarrer dans quelques secondes pour l'appliquer entièrement.\n\n$(tail -4 "$LOG")"
 else
     zenity --error --title="Mise à jour Syntax OS" --window-icon="$ICON" --width=380 \
         --text="La mise à jour a échoué (ou l'autorisation a été refusée).\n\nDétails : $LOG"

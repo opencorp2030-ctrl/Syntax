@@ -25,4 +25,15 @@
     </defaults>
     <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/syntax/selfupdate.sh</annotate>
   </action>
+
+  <action id="org.syntax.settingsapply">
+    <description>Appliquer un réglage Syntax OS</description>
+    <message>Authentification nécessaire pour changer ce réglage</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/syntax/libexec/syntax-settings-apply</annotate>
+  </action>
 </policyconfig>

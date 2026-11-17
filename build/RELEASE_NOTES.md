@@ -1,4 +1,4 @@
-Syntax OS 1.4 — écran de connexion avec plusieurs comptes, actions du dock sans mot de passe répété, deuxième piste pour le Bluetooth.
+Syntax OS 1.5 — redémarrage automatique après mise à jour, menu Marche/Arrêt, Réglages Syntax, nouveau logo.
 
 **Installation**
 
@@ -9,12 +9,12 @@ Syntax OS 1.4 — écran de connexion avec plusieurs comptes, actions du dock sa
 5. Identifiant `syntax`, mot de passe `syntax` — le portail t'oblige à le remplacer à la première connexion.
 
 **Dans cette version** :
-- **Écran de connexion Syntax, avec plusieurs comptes.** Dès qu'un vrai moniteur est branché, tu tombes sur l'écran de connexion (comptes avec photo, un clic, mot de passe) au lieu d'ouvrir directement une session — comme sur Windows. Choisis n'importe lequel des comptes créés depuis l'onglet *Comptes* du portail. « Changer d'utilisateur » (menu du bureau, ou icône du dock) y ramène à tout moment sans redémarrer.
-  Sans moniteur branché, la connexion reste automatique : indispensable pour qu'un Pi sans écran ni clavier reste joignable par Syntax Connect dès le premier démarrage.
-- **Changer la taille du dock, ajouter/retirer une application, lancer la mise à jour : plus de mot de passe répété** pour un compte administrateur. Avant, pkexec le redemandait à chaque fois, même pour des actions sans risque ; c'est maintenant limité à ces deux actions précises, pas à pkexec en général.
-- **Bluetooth, deuxième piste.** `UserspaceHID=true` force BlueZ à traiter le clavier/la souris en espace utilisateur (uHID) plutôt que par le pilote HID du noyau — une cause connue et documentée de « connecté mais ne répond pas » pour certains périphériques Bluetooth classiques (non-BLE), distincte de la piste BLE déjà tentée en 1.1.
-- Petit correctif de fiabilité : l'onglet *Écran* du portail retente la connexion pendant quelques secondes au lieu d'échouer immédiatement si la session graphique vient juste de démarrer.
+- **Redémarrage automatique après une mise à jour.** Qu'elle soit lancée depuis l'application « Mise à jour Syntax » ou par la vérification quotidienne, Syntax affiche maintenant une fenêtre (ou une notification) confirmant l'installation, puis redémarre tout seul 20 secondes après pour appliquer la mise à jour entièrement.
+- **Marche/Arrêt, comme sur Windows.** Une icône dans le dock (et une entrée dans le lanceur) ouvre un vrai menu redémarrer / éteindre / se déconnecter — l'outil déjà fourni par Raspberry Pi OS, simplement rebaptisé et remis en avant au lieu d'être caché.
+- **Réglages Syntax**, une fenêtre à nous (clavier, fond d'écran, comptes, mise à jour, dock, diagnostic Bluetooth, à propos) à la place du panneau générique « Raspberry Pi Configuration », toujours accessible sous son vrai nom pour les réglages avancés (overclock, caméra, GPIO…).
+- **Diagnostic Bluetooth en un clic** (dans Réglages Syntax) : récupère l'état du service, les appareils appairés et les lignes liées au HID dans les journaux, copie tout dans le presse-papiers — pour nous envoyer un vrai diagnostic sans taper de commande.
+- **Nouveau logo** : un monogramme « S » plus net, à la place de l'ancien symbole en chevrons. Se propage automatiquement partout (dock, écran de connexion, site) puisqu'il n'y a qu'un seul fichier source.
 
-**Connu, encore possiblement non résolu** : si la souris/le clavier Bluetooth ne fonctionne toujours pas après cette mise à jour, il reste une piste non testée (désactiver `hidp`, forcer le module `uhid`) qui demande de vérifier en premier, directement sur le Pi : `journalctl -u bluetooth | grep -i hid` et `bluetoothctl info <adresse>`. Envoie ce résultat pour un correctif ciblé plutôt que deviné.
+**Bluetooth** : toujours pas de piste confirmée pour le cas signalé malgré deux tentatives (BLE en 1.1, uHID en 1.4). Utilise le nouveau Diagnostic Bluetooth et envoie-nous le résultat — sans ce diagnostic, deviner un troisième correctif à l'aveugle risquerait de ne pas régler le vrai problème.
 
 Tout le reste (accès par Internet avec ton domaine Cloudflare, etc.) est expliqué dans le README.

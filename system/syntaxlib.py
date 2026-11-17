@@ -137,7 +137,7 @@ def create_account(username, password, admin=True):
     if err:
         return False, err
     groups = ["sudo"] if admin else []
-    for g in ("docker", "plugdev", "video", "audio", "input"):
+    for g in ("docker", "plugdev", "video", "audio", "input", "systemd-journal"):
         if run(["getent", "group", g])[0] == 0:
             groups.append(g)
     code, out = run(["useradd", "-m", "-s", "/bin/bash", "-G", ",".join(groups), username])
