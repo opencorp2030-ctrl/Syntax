@@ -1,4 +1,4 @@
-Syntax OS 2.0 — icônes SatisCorp conformes à la marque, set d'icônes Syntax simplifié, 3 nouveaux fonds d'écran, Réglages du dock refait avec glisser-déposer.
+Syntax OS 2.1 — « Mise à jour Syntax » refaite dans le même style que le reste.
 
 **Installation**
 
@@ -9,15 +9,10 @@ Syntax OS 2.0 — icônes SatisCorp conformes à la marque, set d'icônes Syntax
 5. Identifiant `syntax`, mot de passe `syntax` — le portail t'oblige à le remplacer à la première connexion.
 
 **Dans cette version** :
-- **Icônes SatisCode, SatisDocs et SatisReader refaites** à partir de la vraie identité SatisCorp (github.com/SatisCorprperation/Branding) : le S de la marque, sur la couleur officielle de chaque application (orange, bleu, vert). livepreview.usecartouche.com n'a pas pu être consulté depuis cet environnement de build (hors de son réseau autorisé) ; tout vient du dépôt GitHub.
-- **Icônes Syntax simplifiées** : Réglages, Marche/Arrêt, Mise à jour, Changer d'utilisateur, Réglages du dock, Syntax Connect — couleur pleine plutôt que dégradé, plus sobres.
-- **3 nouveaux fonds d'écran** (Aurora, Dotgrid, Peaks), en plus des deux déjà présents — tous choisissables depuis Réglages Syntax → Fond d'écran.
-- **Réglages du dock entièrement refait** : même fenêtre que Réglages Syntax et le menu Démarrer (recherche de style, pas de zenity), et surtout un vrai glisser-déposer pour réorganiser les icônes épinglées — on fait glisser une icône au-dessus d'une autre pour échanger leur position, ça s'applique tout de suite.
-- **Limite technique honnête, qui ne changera pas sans remplacer le dock** : le dock réel (waybar, une barre d'outils) ne peut toujours pas recevoir une icône glissée directement dessus depuis une autre fenêtre — ce n'est pas un choix, waybar n'a simplement pas cette capacité, et rien côté Syntax OS ne peut changer ça sans le remplacer entièrement par un autre programme. Réglages du dock (lui, glissable) reste le moyen de réorganiser.
+- **« Mise à jour Syntax » refaite**, dernière fenêtre encore en zenity : même page web locale que le menu Démarrer, Réglages Syntax et Réglages du dock — confirmation, journal en direct, puis état final (réussi ou échoué), redémarrage automatique inclus comme avant.
+- Avec cette version, les quatre applications de bureau propres à Syntax OS (menu Démarrer, Réglages Syntax, Réglages du dock, Mise à jour) partagent maintenant exactement le même langage visuel.
 
-**Toujours pas refait** : « Mise à jour Syntax » utilise encore l'ancien style de fenêtre (zenity).
-
-**Bluetooth** : toujours pas de piste confirmée. Diagnostic Bluetooth (dans Réglages Syntax) copie tout dans le presse-papiers — colle-le ici.
+**Bluetooth** : toujours pas de piste confirmée. Diagnostic Bluetooth (dans Réglages Syntax) copie tout dans le presse-papiers — colle-le ici, c'est la seule façon d'avancer dessus.
 
 **Rappel important (1.9)** : si tu étais sur une version antérieure à 1.9, un `syntax self-update` seul ne suffisait pas à tout récupérer. Un reflash est nécessaire une fois pour repartir sur une base saine ; les mises à jour suivantes fonctionnent normalement depuis.
 
