@@ -1,7 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <rect width="128" height="128" rx="29" fill="#1c1f22"/>
-  <path d="M40 54a24 24 0 0 1 44-13" fill="none" stroke="#2dd4bf" stroke-width="8" stroke-linecap="round"/>
-  <path d="M84 33v14H70" fill="none" stroke="#2dd4bf" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M88 74a24 24 0 0 1-44 13" fill="none" stroke="#ff7a45" stroke-width="8" stroke-linecap="round"/>
-  <path d="M44 95V81h14" fill="none" stroke="#ff7a45" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><defs>
+<linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#36c2b4"/><stop offset="1" stop-color="#1f8f84"/>
+</linearGradient>
+<linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#ffffff" stop-opacity="0.18"/>
+  <stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
+</linearGradient>
+</defs><rect width="128" height="128" rx="28" fill="url(#g)"/><rect width="128" height="128" rx="28" fill="url(#sheen)"/><g fill="none" stroke="#ffffff"><g transform="translate(64,64)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path d="M -26 -24 A 36 36 0 1 1 -30 6" fill="none"/><path d="M -34 -30 L -26 -24 L -18 -32" fill="none"/></g></g></svg>

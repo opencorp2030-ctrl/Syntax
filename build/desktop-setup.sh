@@ -198,7 +198,7 @@ Type=Application
 Name=Réglages Syntax
 Comment=Clavier, fond d'écran, comptes, mise à jour, dock
 Exec=/usr/share/syntax/desktop/bin/syntax-settings
-Icon=preferences-system
+Icon=syntax-settings
 Categories=System;
 DESK
 
@@ -208,7 +208,7 @@ Type=Application
 Name=Changer d'utilisateur
 Comment=Retourne à l'écran de connexion pour choisir un autre compte
 Exec=dm-tool switch-to-greeter
-Icon=system-switch-user
+Icon=switch-user
 Categories=System;
 DESK
 
@@ -333,7 +333,7 @@ done
 # « redémarrer / éteindre / se déconnecter » façon Windows — on le garde, juste
 # rebaptisé et affiché dans le dock, plutôt que d'en réécrire un à la main.
 if [ -f /usr/share/applications/lxsession-logout.desktop ]; then
-    printf '[Desktop Entry]\nType=Application\nName=Marche/Arrêt\nComment=Redémarrer, éteindre ou se déconnecter\nExec=lxsession-logout\nIcon=system-shutdown\nCategories=System;\n' \
+    printf '[Desktop Entry]\nType=Application\nName=Marche/Arrêt\nComment=Redémarrer, éteindre ou se déconnecter\nExec=lxsession-logout\nIcon=power\nCategories=System;\n' \
         > /usr/local/share/applications/lxsession-logout.desktop
 fi
 if [ -f /usr/share/applications/foot.desktop ]; then

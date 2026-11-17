@@ -61,18 +61,18 @@ def default_items():
         items.append({"id": "satisreader", "label": "SatisReader", "exec": "xdg-open http://127.0.0.1:8092/",
                       "icon_hint": ["satisreader"]})
     items.append({"id": "connect", "label": "Syntax Connect", "exec": "xdg-open http://localhost/",
-                  "icon_hint": ["/usr/share/syntax/logo-connect.svg"]})
+                  "icon_hint": ["connect"]})
     items.append({"id": "update", "label": "Mise à jour Syntax", "exec": "/usr/share/syntax/desktop/bin/update-app",
                   "icon_hint": ["update"]})
     items.append({"id": "dock-settings", "label": "Réglages du dock", "exec": "/usr/share/syntax/desktop/bin/dock-settings",
-                  "icon_hint": ["preferences-desktop", "dock"]})
+                  "icon_hint": ["dock-settings", "preferences-desktop", "dock"]})
     items.append({"id": "settings", "label": "Réglages Syntax", "exec": "/usr/share/syntax/desktop/bin/syntax-settings",
-                  "icon_hint": ["preferences-system", "systemsettings", "gnome-control-center"]})
+                  "icon_hint": ["syntax-settings", "preferences-system", "systemsettings", "gnome-control-center"]})
     items.append({"id": "switch-user", "label": "Changer d'utilisateur", "exec": "dm-tool switch-to-greeter",
-                  "icon_hint": ["system-switch-user", "system-users"]})
+                  "icon_hint": ["switch-user", "system-switch-user", "system-users"]})
     if have("lxsession-logout"):
         items.append({"id": "power", "label": "Marche/Arrêt", "exec": "lxsession-logout",
-                      "icon_hint": ["system-shutdown", "system-log-out"]})
+                      "icon_hint": ["power", "system-shutdown", "system-log-out"]})
     return items
 
 
