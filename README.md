@@ -45,22 +45,19 @@ Cloudflare.
   Changer d'utilisateur — dans le même langage visuel que Syntax Connect. Après une
   mise à jour, le Pi redémarre tout seul pour l'appliquer.
 - **Icônes de bureau** : glisse un fichier sur le bureau, ou clic droit → Créer un nouveau.
-  Le dock (waybar), en revanche, ne prend pas en charge le glisser-déposer d'icônes —
-  utilise Réglages du dock pour ajouter, retirer ou réorganiser.
 
 ## Le dock
 
 Clic droit sur n'importe quelle icône du dock (ou lance l'application « Réglages du dock »,
-disponible dans le lanceur) pour :
+disponible dans le lanceur) pour changer la taille des icônes, en ajouter, en retirer, ou
+réorganiser l'ordre par glisser-déposer dans la fenêtre de réglages.
 
-- changer la **taille des icônes** (quatre tailles, appliquée tout de suite) ;
-- **ajouter** une application installée (tout ce qui a une icône dans le menu peut être épinglé) ;
-- **retirer** une icône du dock ;
-- **réorganiser** l'ordre des icônes.
-
-Techniquement, le dock de Syntax OS (waybar) ne peut pas afficher un nom en permanence sous
-chaque icône comme le Dock de macOS — survole une icône pour voir son nom à la place. Le reste
-(taille, contenu, ordre) fonctionne comme décrit.
+Limite technique honnête, qui restera vraie tant que le dock reste basé sur waybar : waybar
+est une barre d'outils (comme une barre des tâches), pas un vrai dock comme celui de macOS —
+il ne peut ni afficher un nom en permanence sous chaque icône (survole pour le voir), ni
+recevoir une icône glissée directement dessus depuis une autre fenêtre. Réglages du dock
+compense ce deuxième point : on y glisse-dépose les icônes pour les réorganiser, elles
+s'appliquent ensuite au dock réel.
 
 ## Installer
 

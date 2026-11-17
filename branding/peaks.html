@@ -1,0 +1,27 @@
+<!doctype html><html><head><style>
+html,body{margin:0;width:3840px;height:2160px;overflow:hidden;background:#07090c}
+svg{position:absolute;inset:0}
+</style></head><body>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3840 2160" width="3840" height="2160">
+<defs>
+ <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+   <stop offset="0" stop-color="#0a0c10"/><stop offset=".55" stop-color="#171318"/><stop offset="1" stop-color="#241517"/>
+ </linearGradient>
+ <radialGradient id="sun" cx=".5" cy=".5" r=".5">
+   <stop offset="0" stop-color="#ffb066" stop-opacity=".9"/>
+   <stop offset=".6" stop-color="#e8603a" stop-opacity=".5"/>
+   <stop offset="1" stop-color="#e8603a" stop-opacity="0"/>
+ </radialGradient>
+ <filter id="blur1" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="90"/></filter>
+ <linearGradient id="p1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2a2f"/><stop offset="1" stop-color="#0c1517"/></linearGradient>
+ <linearGradient id="p2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#15363a"/><stop offset="1" stop-color="#09181a"/></linearGradient>
+ <linearGradient id="p3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a1214"/><stop offset="1" stop-color="#05090a"/></linearGradient>
+ <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="4"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .035 0"/></filter>
+</defs>
+<rect width="3840" height="2160" fill="url(#sky)"/>
+<circle cx="1920" cy="760" r="520" fill="url(#sun)" filter="url(#blur1)"/>
+<path fill="url(#p1)" d="M0 1150 L400 950 L820 1200 L1300 880 L1750 1150 L2200 920 L2650 1200 L3100 940 L3550 1180 L3840 1000 L3840 2160 L0 2160 Z"/>
+<path fill="url(#p2)" d="M0 1350 L500 1150 L950 1420 L1450 1120 L1900 1380 L2350 1150 L2800 1420 L3250 1140 L3700 1380 L3840 1280 L3840 2160 L0 2160 Z"/>
+<path fill="url(#p3)" d="M0 1600 L600 1420 L1150 1680 L1700 1400 L2250 1660 L2800 1400 L3350 1680 L3840 1500 L3840 2160 L0 2160 Z"/>
+<rect width="3840" height="2160" filter="url(#grain)"/>
+</svg></body></html>

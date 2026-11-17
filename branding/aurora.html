@@ -1,0 +1,24 @@
+<!doctype html><html><head><style>
+html,body{margin:0;width:3840px;height:2160px;overflow:hidden;background:#06080a}
+svg{position:absolute;inset:0}
+</style></head><body>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3840 2160" width="3840" height="2160">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#07090c"/><stop offset="1" stop-color="#0b0f10"/></linearGradient>
+ <filter id="b1" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="160"/></filter>
+ <filter id="b2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="80"/></filter>
+ <filter id="b3" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="20"/></filter>
+ <linearGradient id="r1" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d9622c"/><stop offset=".5" stop-color="#e8903a"/><stop offset="1" stop-color="#1f8f82"/></linearGradient>
+ <linearGradient id="r2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff7a45"/><stop offset=".55" stop-color="#2dd4bf"/><stop offset="1" stop-color="#19b0c8"/></linearGradient>
+ <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="11"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .04 0"/></filter>
+ <radialGradient id="vig" cx=".5" cy=".42" r=".8"><stop offset=".5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".6"/></radialGradient>
+</defs>
+<rect width="3840" height="2160" fill="url(#bg)"/>
+<g transform="rotate(8 1920 1080)">
+ <path filter="url(#b1)" opacity=".8" fill="url(#r1)" d="M-700 1650 C 400 1000, 1400 1950, 2300 1300 S 3800 750, 4700 1250 L 4700 1850 C 3800 1350, 3100 2050, 2300 1950 S 400 1650, -700 2250 Z"/>
+ <path filter="url(#b2)" opacity=".85" fill="url(#r2)" d="M-700 1500 C 400 900, 1400 1800, 2300 1200 S 3800 650, 4700 1100 L 4700 1350 C 3800 900, 3100 1600, 2300 1480 S 400 1180, -700 1700 Z"/>
+ <path filter="url(#b3)" opacity=".55" fill="none" stroke="url(#r2)" stroke-width="7" d="M-700 1480 C 400 880, 1400 1760, 2300 1180 S 3800 630, 4700 1080"/>
+</g>
+<rect width="3840" height="2160" filter="url(#grain)"/>
+<rect width="3840" height="2160" fill="url(#vig)"/>
+</svg></body></html>
