@@ -101,22 +101,40 @@ step "Paquet de mise à jour légère (syntax self-update)"
 # Seuls les fichiers propres à Syntax OS (portail, bureau, icônes, services) — jamais la
 # configuration de l'utilisateur ni les applications tierces, trop volumineuses pour une
 # mise à jour quotidienne.
+# Liste volontairement large plutôt qu'au cas par cas : une entrée manquante ici est
+# un fichier modifié qui ne rejoint jamais un système déjà installé (seul un nouveau
+# flash l'aurait) — c'est exactement ce qui a fait manquer plusieurs correctifs
+# (service de connexion automatique, règles polkit, Bluetooth, icônes…) à des
+# installations mises à jour plutôt que reflashées. `2>/dev/null` ignore sans erreur
+# les chemins absents d'une version donnée.
 UPDATE_TAR="$OUT/syntax-update-${VERSION}.tar.gz"
 ( cd "$MNT" && tar -czf "$UPDATE_TAR" --owner=0 --group=0 \
     usr/lib/syntax \
     usr/share/syntax \
     usr/share/themes/Syntax \
-    usr/share/icons/hicolor/scalable/apps/syntax.svg \
-    usr/share/icons/hicolor/scalable/apps/satiscode.svg \
-    usr/share/icons/hicolor/scalable/apps/satisdocs.svg \
-    usr/share/icons/hicolor/scalable/apps/satisreader.svg \
-    usr/share/icons/hicolor/scalable/apps/poly.svg \
+    usr/share/icons/hicolor/scalable/apps \
     etc/systemd/system/syntax-portal.service \
     etc/systemd/system/syntax-tunnel.service \
+    etc/systemd/system/syntax-setup.service \
+    etc/systemd/system/syntax-userguard.service \
     etc/systemd/system/syntax-selfupdate.service \
     etc/systemd/system/syntax-selfupdate.timer \
+    etc/systemd/system/syntax-autologin.service \
     etc/pam.d/syntax-portal \
     etc/xdg/autostart/syntax-screen.desktop \
+    etc/polkit-1/actions/org.syntax.pkexec.policy \
+    etc/polkit-1/rules.d/49-syntax.rules \
+    etc/bluetooth/main.conf \
+    etc/bluetooth/input.conf \
+    etc/lightdm/pi-greeter.conf \
+    etc/xdg/labwc/rc.xml \
+    etc/xdg/labwc/menu.xml \
+    etc/xdg/labwc/environment \
+    etc/xdg/labwc/autostart \
+    etc/xdg/labwc-greeter/rc.xml \
+    etc/xdg/labwc-greeter/environment \
+    etc/xdg/pcmanfm/default \
+    etc/default/keyboard \
     2>/dev/null )
 sha256sum "$UPDATE_TAR" | awk '{print $1}' > "$UPDATE_TAR.sha256"
 ls -lh "$UPDATE_TAR"

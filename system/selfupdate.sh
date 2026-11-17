@@ -85,6 +85,15 @@ tar -C / -xzf "$WORK/update.tar.gz" >>"$LOG" 2>&1
 echo "$LATEST" > "$VERSION_FILE"
 
 systemctl daemon-reload
+# Une mise à jour ne fait qu'installer des fichiers : un nouveau service introduit
+# dans une version plus récente (ex. syntax-autologin.service en 1.4) n'est jamais
+# activé tout seul, contrairement à une image fraîchement flashée. On (ré)active donc
+# ici, à chaque mise à jour, tous les services Syntax censés toujours être actifs —
+# sans effet si déjà activés.
+for unit in syntax-portal.service syntax-setup.service syntax-userguard.service \
+            syntax-selfupdate.timer syntax-autologin.service; do
+    systemctl list-unit-files "$unit" >/dev/null 2>&1 && systemctl enable "$unit" >>"$LOG" 2>&1
+done
 systemctl restart syntax-portal.service 2>>"$LOG" || true
 if [ -x /usr/lib/syntax/desktop/make-dock.py ] || [ -f /usr/lib/syntax/desktop/make-dock.py ]; then
     python3 /usr/lib/syntax/desktop/make-dock.py /usr/share/syntax/desktop/waybar.json >>"$LOG" 2>&1 || true
