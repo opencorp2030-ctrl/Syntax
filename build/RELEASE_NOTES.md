@@ -1,4 +1,4 @@
-Syntax OS 1.6 — menu Démarrer façon Windows (récents + Marche/Arrêt dans la même fenêtre), icônes de bureau activées.
+Syntax OS 1.7 — vrai menu Démarrer en grille d'icônes, Réglages Syntax refaits entièrement, fond d'écran facile à changer.
 
 **Installation**
 
@@ -9,11 +9,11 @@ Syntax OS 1.6 — menu Démarrer façon Windows (récents + Marche/Arrêt dans l
 5. Identifiant `syntax`, mot de passe `syntax` — le portail t'oblige à le remplacer à la première connexion.
 
 **Dans cette version** :
-- **Le logo ouvre désormais un vrai menu Démarrer** : les applications récemment lancées en haut, « Marche/Arrêt » et « Changer d'utilisateur » juste en dessous, puis toutes les applications — une seule fenêtre, plus besoin de passer par le dock pour éteindre ou redémarrer. Limite honnête : c'est une liste texte filtrable (le moteur, fuzzel), pas une grille d'icônes avec aperçus comme Windows ; et quelques entrées système de Raspberry Pi OS que nous n'avons pas encore identifiées avec certitude restent visibles dans la liste.
-- **Icônes de bureau activées.** Raspberry Pi OS les désactive par défaut sous labwc (aucune icône, même en glissant un fichier) ; c'est maintenant corrigé — glisse un fichier sur le bureau, ou clic droit → Créer un nouveau, pour y poser une icône.
+- **Le menu Démarrer est entièrement refait.** Fini la liste texte de la 1.6 : c'est maintenant une vraie grille d'icônes — recherche, récents, épinglés, toutes les applications, compte et Marche/Arrêt — dans le même langage visuel que Syntax Connect (même typographie, mêmes couleurs, mêmes cartes). Techniquement, c'est une page web locale affichée dans sa propre fenêtre, jamais exposée au réseau.
+- **Réglages Syntax refaits pareil** : clavier, fond d'écran (avec aperçus cliquables — plus besoin de chercher un sélecteur de fichier), comptes, mise à jour, dock, diagnostic Bluetooth, à propos.
+- **Limite honnête sur la position des fenêtres** : rien ne garantit encore qu'elles s'ancrent proprement au bord de l'écran sur un vrai Pi — on n'a pas pu le vérifier sans matériel réel. Dis-nous où elles s'ouvrent.
+- **Pas encore refaits** : « Réglages du dock » et « Mise à jour Syntax » utilisent encore l'ancien style de fenêtre (zenity) — prochaine étape.
 
-**Dock, limite technique honnête** : le dock (waybar) ne prend pas en charge le glisser-déposer d'icônes — c'est une barre d'outils, pas un vrai dock comme celui de macOS, et rien ne peut changer ça sans le remplacer entièrement. Réglages du dock (clic droit sur une icône, ou dans Réglages Syntax) fait exactement la même chose — ajouter, retirer, réorganiser — mais par menu plutôt que par glisser-déposer.
-
-**Bluetooth** : toujours pas de piste confirmée pour le cas signalé, malgré trois tentatives. Utilise « Diagnostic Bluetooth » dans Réglages Syntax (copie tout dans le presse-papiers) et envoie le résultat — sans ce diagnostic, un nouveau correctif resterait une supposition.
+**Bluetooth** : toujours pas de piste confirmée. Diagnostic Bluetooth (dans Réglages Syntax) copie tout dans le presse-papiers — colle-le ici.
 
 Tout le reste (accès par Internet avec ton domaine Cloudflare, etc.) est expliqué dans le README.

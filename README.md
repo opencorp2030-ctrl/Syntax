@@ -36,13 +36,14 @@ Cloudflare.
   automatique pour que le Pi reste joignable par Syntax Connect dès le premier démarrage.
 - **Dock personnalisable** : change la taille des icônes, ajoute ou retire des applications,
   change leur ordre — clic droit sur une icône du dock, ou lance « Réglages du dock ».
-- **Réglages Syntax** : clavier, fond d'écran, diagnostic Bluetooth en un clic, et le reste,
-  dans une fenêtre à nous plutôt que le panneau générique Raspberry Pi (toujours disponible
-  sous son vrai nom pour les réglages avancés : overclock, caméra, GPIO…).
-- **Menu Démarrer** : le logo du dock (ou la touche Super) ouvre une fenêtre avec les
-  applications récentes, Marche/Arrêt et Changer d'utilisateur, puis toutes les
-  applications — comme le menu Démarrer de Windows, en liste filtrable plutôt qu'en
-  grille d'icônes. Après une mise à jour, le Pi redémarre tout seul pour l'appliquer.
+- **Réglages Syntax** : clavier, fond d'écran (aperçus cliquables), diagnostic Bluetooth
+  en un clic, et le reste, dans une fenêtre à nous plutôt que le panneau générique
+  Raspberry Pi (toujours disponible sous son vrai nom pour les réglages avancés :
+  overclock, caméra, GPIO…).
+- **Menu Démarrer** : le logo du dock (ou la touche Super) ouvre une vraie grille
+  d'icônes — recherche, récents, épinglés, toutes les applications, Marche/Arrêt et
+  Changer d'utilisateur — dans le même langage visuel que Syntax Connect. Après une
+  mise à jour, le Pi redémarre tout seul pour l'appliquer.
 - **Icônes de bureau** : glisse un fichier sur le bureau, ou clic droit → Créer un nouveau.
   Le dock (waybar), en revanche, ne prend pas en charge le glisser-déposer d'icônes —
   utilise Réglages du dock pour ajouter, retirer ou réorganiser.

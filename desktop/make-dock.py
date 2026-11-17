@@ -110,7 +110,7 @@ def build(conf):
         "modules-left": ["image#menu", "custom/sep"],
         "modules-right": ["tray", "pulseaudio", "clock", "custom/power"],
         "image#menu": {"path": "/usr/share/syntax/logo.svg", "size": size,
-                       "on-click": "/usr/share/syntax/desktop/bin/launcher", "tooltip": False},
+                       "on-click": "/usr/share/syntax/desktop/bin/syntax-startmenu", "tooltip": False},
         "custom/sep": {"format": " ", "tooltip": False},
         "wlr/taskbar": {"format": "{icon}", "icon-size": max(20, size - 2),
                         "icon-theme": ["Papirus-Dark", "Papirus", "hicolor"],

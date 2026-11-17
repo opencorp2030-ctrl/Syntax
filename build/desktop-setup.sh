@@ -273,7 +273,7 @@ subs = [
     (r'command="wfpanelctl volumepulse volu"', 'command="wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+"'),
     (r'command="wfpanelctl volumepulse vold"', 'command="wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"'),
     (r'command="wfpanelctl volumepulse mute"', 'command="wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"'),
-    (r'command="wfpanelctl \S*menu menu"', 'command="/usr/share/syntax/desktop/bin/launcher"'),
+    (r'command="wfpanelctl \S*menu menu"', 'command="/usr/share/syntax/desktop/bin/syntax-startmenu"'),
     (r'command="wfpanelctl netman menu"', 'command="nm-connection-editor"'),
     (r'command="wfpanelctl bluetooth menu"', 'command="blueman-manager"'),
     (r'command="pishutdown"', 'command="/usr/share/syntax/desktop/bin/power-menu"'),
@@ -295,7 +295,7 @@ cat > /etc/xdg/labwc/menu.xml <<'M'
 <openbox_menu>
   <menu id="root-menu">
     <item label="Applications…">
-      <action name="Execute" command="/usr/share/syntax/desktop/bin/launcher" />
+      <action name="Execute" command="/usr/share/syntax/desktop/bin/syntax-startmenu" />
     </item>
     <item label="Terminal">
       <action name="Execute" command="x-terminal-emulator" />
