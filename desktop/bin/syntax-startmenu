@@ -203,8 +203,10 @@ const RECENT = __RECENT_JSON__;
 const ALL = __ALL_JSON__;
 
 function iconHtml(item){
-  return item.icon ? `<img src="/icon?p=${encodeURIComponent(item.icon)}">`
-                    : `<div class="sm-ic">${(item.name[0]||"?").toUpperCase()}</div>`;
+  const letter = (item.name[0]||"?").toUpperCase();
+  return item.icon
+    ? `<img src="/icon?p=${encodeURIComponent(item.icon)}" onerror="this.outerHTML='&lt;div class=&quot;sm-ic&quot;&gt;${letter}&lt;/div&gt;'">`
+    : `<div class="sm-ic">${letter}</div>`;
 }
 function tile(container, item){
   const b = document.createElement("button");

@@ -124,8 +124,9 @@ const AVAILABLE = __AVAILABLE_JSON__;
 let SIZE = __SIZE_JSON__;
 
 function iconHtml(icon, name){
-  return icon ? `<img src="/icon?p=${encodeURIComponent(icon)}">`
-               : `<div class="fallback"></div>`;
+  return icon
+    ? `<img src="/icon?p=${encodeURIComponent(icon)}" onerror="this.outerHTML='&lt;div class=&quot;fallback&quot;&gt;&lt;/div&gt;'">`
+    : `<div class="fallback"></div>`;
 }
 
 function save(){

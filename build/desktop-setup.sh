@@ -282,6 +282,29 @@ subs = [
 for pat, rep in subs:
     s, n = re.subn(pat, rep, s)
     print(f"rc.xml : {n} × {pat}")
+
+# Les applications Syntax (menu Démarrer, Réglages, etc.) sont de simples pages web
+# affichées par chromium --app= : sans cette règle, labwc leur dessine une barre de
+# titre classique (barre de titre + réduire/agrandir/fermer), comme n'importe quelle
+# fenêtre — repéré sur un vrai Pi, pas juste supposé. identifier= cible le app_id
+# Wayland, qui correspond au --class= passé à chromium pour chacune de ces pages.
+WINDOW_RULES = """
+<windowRules>
+  <windowRule identifier="syntax-startmenu" serverDecoration="no" />
+  <windowRule identifier="syntax-settings" serverDecoration="no" />
+  <windowRule identifier="syntax-dock-settings" serverDecoration="no" />
+  <windowRule identifier="syntax-update-app" serverDecoration="no" />
+</windowRules>
+</labwc_config>"""
+if "<windowRules>" not in s and "</labwc_config>" in s:
+    s = s.replace("</labwc_config>", WINDOW_RULES, 1)
+    print("rc.xml : windowRules ajoutées")
+else:
+    print("rc.xml : windowRules NON ajoutées (balise de fermeture introuvable ou déjà présentes)")
+
+import xml.dom.minidom
+xml.dom.minidom.parseString(s)  # abandonne la construction si le XML produit est invalide
+print("rc.xml : XML valide, confirmé.")
 open(p, "w", encoding="utf-8").write(s)
 PY
 cat > /etc/xdg/labwc/autostart <<'A'
