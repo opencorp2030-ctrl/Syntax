@@ -1,0 +1,373 @@
+#!/usr/bin/env python3
+"""Menu Démarrer de Syntax OS : clic sur le logo du dock, ou touche Super.
+
+Un vrai menu en grille d'icônes (pas une liste texte) — recherche, récents, épinglés,
+toutes les applications, compte + Marche/Arrêt — glissant depuis le bord droit de
+l'écran. Un second appel referme le menu déjà ouvert (bascule).
+
+Architecture : un petit serveur HTTP local (127.0.0.1, port éphémère, jamais exposé au
+réseau) sert une page générée à la volée, et exécute les applications choisies — une
+page web ne peut pas lancer de programme elle-même. Affichée via `chromium --app=...`,
+qui retire la barre d'adresse et les onglets.
+
+Limite honnête : rien ici ne garantit que la fenêtre s'ancre bien au bord droit de
+l'écran sur un vrai Pi — ça dépend d'une règle de fenêtre labwc (voir rc.xml) que nous
+n'avons pas pu vérifier visuellement avant l'envoi.
+"""
+import html
+import http.server
+import importlib.util
+import json
+import os
+import signal
+import socket
+import subprocess
+import sys
+import threading
+import urllib.parse
+
+DOCK_EDIT = "/usr/lib/syntax/desktop/dock-edit.py"
+DOCK_CONF = os.environ.get("SYNTAX_DOCK_CONF", "/etc/syntax-dock.json")
+ICON_DIRS = ["/usr/share/icons/Papirus/64x64/apps", "/usr/share/icons/Papirus/48x48/apps",
+             "/usr/share/icons/hicolor/scalable/apps", "/usr/share/icons/hicolor/256x256/apps",
+             "/usr/share/icons/hicolor/128x128/apps", "/usr/share/icons/hicolor/48x48/apps",
+             "/usr/share/pixmaps"]
+RECENT_FILE = os.path.join(
+    os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")),
+    "syntax-launcher-recent",
+)
+LOCK_FILE = os.path.join(
+    os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "syntax-startmenu.pid",
+)
+MAX_RECENT = 8
+POWER_ITEMS = [
+    {"id": "__power", "name": "Marche/Arrêt", "exec": "lxsession-logout"},
+    {"id": "__switch", "name": "Changer d'utilisateur", "exec": "dm-tool switch-to-greeter"},
+]
+
+
+def load_dock_edit():
+    spec = importlib.util.spec_from_file_location("syntax_dock_edit", DOCK_EDIT)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def resolve_icon(name):
+    if not name:
+        return None
+    if name.startswith("/"):
+        return name if os.path.exists(name) else None
+    for d in ICON_DIRS:
+        for ext in ("svg", "png"):
+            p = os.path.join(d, f"{name}.{ext}")
+            if os.path.exists(p):
+                return p
+    return None
+
+
+def load_recent():
+    try:
+        with open(RECENT_FILE, encoding="utf-8") as f:
+            return [line.strip() for line in f if line.strip()]
+    except OSError:
+        return []
+
+
+def save_recent(name):
+    names = [name] + [n for n in load_recent() if n != name]
+    try:
+        os.makedirs(os.path.dirname(RECENT_FILE), exist_ok=True)
+        with open(RECENT_FILE, "w", encoding="utf-8") as f:
+            f.write("\n".join(names[:MAX_RECENT]))
+    except OSError:
+        pass
+
+
+def toggle_close_if_running():
+    """Si une instance tourne déjà (second appui sur le logo), la ferme et s'arrête."""
+    try:
+        with open(LOCK_FILE, encoding="utf-8") as f:
+            pid = int(f.read().strip())
+        os.kill(pid, signal.SIGTERM)
+        os.remove(LOCK_FILE)
+        return True
+    except (OSError, ValueError):
+        try:
+            os.remove(LOCK_FILE)
+        except OSError:
+            pass
+        return False
+
+
+def build_items():
+    pinned, by_id = [], {}
+    try:
+        dock_edit = load_dock_edit()
+        conf = dock_edit.load(DOCK_CONF)
+        apps = dock_edit.all_apps()
+        exec_to_icon = {info["exec"]: info["icon"] for info in apps.values()}
+        for it in conf["items"]:
+            item = {"id": it["id"], "name": it.get("label", it["id"]), "exec": it["exec"],
+                    "icon": resolve_icon(it.get("icon") or exec_to_icon.get(it["exec"]))}
+            pinned.append(item)
+            by_id[item["exec"]] = item
+        all_items = []
+        for info in apps.values():
+            all_items.append({"id": info["exec"], "name": info["name"], "exec": info["exec"],
+                               "icon": resolve_icon(info["icon"])})
+    except Exception:
+        all_items = []
+    all_items.sort(key=lambda i: i["name"].lower())
+    recent_names = load_recent()
+    by_name = {i["name"]: i for i in all_items}
+    recent = [by_name[n] for n in recent_names if n in by_name]
+    return pinned, recent, all_items
+
+
+PAGE_TEMPLATE = """<!doctype html>
+<html><head><meta charset="utf-8"><title>Syntax</title>
+<link rel="stylesheet" href="http://localhost/static/style.css">
+<meta name="color-scheme" content="light">
+<style>
+/* Toujours clair ici, quel que soit le thème sombre du reste du système — demandé
+   explicitement : « moins sombre ». */
+:root{
+  --bg:#f3f1ec!important; --card:#ffffff!important; --text:#17191b!important; --muted:#6c6560!important;
+  --line:#ddd7cc!important; --accent:#e05a28!important; --accent-text:#ffffff!important;
+  --field:#ffffff!important; --shadow:0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06)!important;
+}
+html,body{margin:0;height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;
+     height:100vh;padding:18px 16px 0}
+.sm-search{position:relative;margin-bottom:18px}
+.sm-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);
+                width:16px;height:16px;color:var(--muted)}
+.sm-search input{padding-left:36px}
+.sm-head{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;
+         letter-spacing:.06em;margin:0 2px 10px}
+.sm-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-bottom:18px}
+.sm-tile{display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 2px;
+         border-radius:14px;cursor:pointer;border:none;background:none;color:var(--text);font:inherit}
+.sm-tile:hover{background:color-mix(in srgb, var(--muted) 10%, transparent)}
+.sm-tile img{width:32px;height:32px;object-fit:contain}
+.sm-ic{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#2dd4bf);
+       display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;
+       color:#fff;flex:none}
+.sm-tile span{font-size:11px;text-align:center;line-height:1.25;max-width:76px;
+              overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.sm-list{flex:1;overflow-y:auto;margin:0 -16px;padding:0 16px 8px}
+.sm-row{display:flex;align-items:center;gap:12px;padding:9px 8px;border-radius:12px;cursor:pointer}
+.sm-row:hover{background:color-mix(in srgb, var(--muted) 10%, transparent)}
+.sm-row img{width:24px;height:24px;flex:none;object-fit:contain}
+.sm-row .sm-ic{width:24px;height:24px;border-radius:7px;font-size:10.5px}
+.sm-row span{font-size:13.5px}
+.sm-letter{font-size:11px;font-weight:700;color:var(--muted);padding:12px 8px 4px}
+.sm-empty{color:var(--muted);font-size:13px;padding:8px 4px}
+.sm-footer{border-top:1px solid var(--line);padding:14px 2px;margin-top:auto;
+           display:flex;align-items:center;gap:10px}
+.sm-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#2dd4bf);
+           display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;color:#fff}
+.sm-footer .name{font-size:13.5px;font-weight:600;flex:1;color:var(--text)}
+.sm-footer button{background:none;border:none;color:var(--muted);cursor:pointer;width:34px;height:34px;
+                   border-radius:980px;display:flex;align-items:center;justify-content:center}
+.sm-footer button:hover{background:color-mix(in srgb, var(--muted) 14%, transparent);color:var(--text)}
+.sm-footer button svg{width:17px;height:17px}
+</style></head>
+<body>
+  <div class="sm-search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input id="q" placeholder="Rechercher une application…" autofocus>
+  </div>
+  <div id="recent-section" style="__RECENT_DISPLAY__">
+    <div class="sm-head">Récents</div>
+    <div class="sm-grid" id="recent-grid"></div>
+  </div>
+  <div class="sm-head">Épinglés</div>
+  <div class="sm-grid" id="pinned-grid"></div>
+  <div class="sm-head">Toutes les applications</div>
+  <div class="sm-list" id="all-list"></div>
+  <div class="sm-footer">
+    <div class="sm-avatar">__USER_INITIAL__</div>
+    <div class="name">__USER_NAME__</div>
+    <button onclick="run('__switch')" title="Changer d'utilisateur">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+    </button>
+    <button onclick="run('__power')" title="Marche/Arrêt">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.8 0"/></svg>
+    </button>
+  </div>
+<script>
+const PINNED = __PINNED_JSON__;
+const RECENT = __RECENT_JSON__;
+const ALL = __ALL_JSON__;
+
+function iconHtml(item){
+  const letter = (item.name[0]||"?").toUpperCase();
+  return item.icon
+    ? `<img src="/icon?p=${encodeURIComponent(item.icon)}" onerror="this.outerHTML='&lt;div class=&quot;sm-ic&quot;&gt;${letter}&lt;/div&gt;'">`
+    : `<div class="sm-ic">${letter}</div>`;
+}
+function tile(container, item){
+  const b = document.createElement("button");
+  b.className = "sm-tile";
+  b.innerHTML = iconHtml(item) + `<span>${item.name}</span>`;
+  b.onclick = () => run(item.id);
+  container.appendChild(b);
+}
+function row(container, item){
+  const r = document.createElement("div");
+  r.className = "sm-row";
+  r.innerHTML = iconHtml(item) + `<span>${item.name}</span>`;
+  r.onclick = () => run(item.id);
+  container.appendChild(r);
+}
+function run(id){
+  fetch("/launch?id=" + encodeURIComponent(id)).finally(() => window.close());
+}
+
+if (RECENT.length) RECENT.forEach(i => tile(document.getElementById("recent-grid"), i));
+else document.getElementById("recent-section").style.display = "none";
+PINNED.forEach(i => tile(document.getElementById("pinned-grid"), i));
+
+const allList = document.getElementById("all-list");
+function renderAll(filterText){
+  allList.innerHTML = "";
+  const f = filterText.trim().toLowerCase();
+  const items = ALL.filter(i => !f || i.name.toLowerCase().includes(f));
+  if (!items.length) { allList.innerHTML = '<div class="sm-empty">Aucun résultat.</div>'; return; }
+  let lastLetter = "";
+  items.forEach(item => {
+    if (!f) {
+      const l = (item.name[0]||"?").toUpperCase();
+      if (l !== lastLetter) {
+        const h = document.createElement("div");
+        h.className = "sm-letter";
+        h.textContent = l;
+        allList.appendChild(h);
+        lastLetter = l;
+      }
+    }
+    row(allList, item);
+  });
+}
+renderAll("");
+document.getElementById("q").addEventListener("input", e => renderAll(e.target.value));
+document.addEventListener("keydown", e => { if (e.key === "Escape") window.close(); });
+</script>
+</body></html>
+"""
+
+
+class Handler(http.server.BaseHTTPRequestHandler):
+    def log_message(self, *a):
+        pass
+
+    def do_GET(self):
+        parsed = urllib.parse.urlparse(self.path)
+        if parsed.path == "/":
+            self._send_page()
+        elif parsed.path == "/icon":
+            self._send_icon(urllib.parse.parse_qs(parsed.query).get("p", [""])[0])
+        elif parsed.path == "/launch":
+            self._launch(urllib.parse.parse_qs(parsed.query).get("id", [""])[0])
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+    def _send_page(self):
+        pinned, recent, all_items = build_items()
+        all_items_with_power = all_items + POWER_ITEMS
+        by_id = {i["id"]: i for i in pinned + recent + all_items_with_power}
+        self.server.item_by_id = by_id
+        user = os.environ.get("USER") or os.environ.get("LOGNAME") or "syntax"
+        page = (PAGE_TEMPLATE
+                .replace("__RECENT_DISPLAY__", "" if recent else "display:none")
+                .replace("__USER_INITIAL__", html.escape(user[0:1].upper()))
+                .replace("__USER_NAME__", html.escape(user))
+                .replace("__PINNED_JSON__", json.dumps(pinned))
+                .replace("__RECENT_JSON__", json.dumps(recent))
+                .replace("__ALL_JSON__", json.dumps(all_items)))
+        body = page.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _send_icon(self, path):
+        if not path or not os.path.isfile(path) or not path.startswith(tuple(ICON_DIRS) + ("/usr/share/syntax",)):
+            self.send_response(404)
+            self.end_headers()
+            return
+        ctype = "image/svg+xml" if path.endswith(".svg") else "image/png"
+        with open(path, "rb") as f:
+            data = f.read()
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def _launch(self, item_id):
+        item = getattr(self.server, "item_by_id", {}).get(item_id)
+        self.send_response(204)
+        self.end_headers()
+        if not item:
+            return
+        subprocess.Popen(["sh", "-c", item["exec"]], start_new_session=True)
+        if item not in POWER_ITEMS and "id" in item and item["id"] not in ("__power", "__switch"):
+            save_recent(item["name"])
+        threading.Timer(0.3, lambda: os.kill(os.getpid(), signal.SIGTERM)).start()
+
+
+def free_port():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(("127.0.0.1", 0))
+    port = s.getsockname()[1]
+    s.close()
+    return port
+
+
+def main():
+    if toggle_close_if_running():
+        return
+
+    os.makedirs(os.path.dirname(LOCK_FILE), exist_ok=True)
+    with open(LOCK_FILE, "w", encoding="utf-8") as f:
+        f.write(str(os.getpid()))
+
+    def cleanup(*_a):
+        try:
+            os.remove(LOCK_FILE)
+        except OSError:
+            pass
+        sys.exit(0)
+
+    signal.signal(signal.SIGTERM, cleanup)
+    signal.signal(signal.SIGINT, cleanup)
+
+    port = free_port()
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+
+    browser = None
+    for b in ("google-chrome", "chromium", "chromium-browser"):
+        if subprocess.run(["sh", "-c", f"command -v {b}"], capture_output=True).returncode == 0:
+            browser = b
+            break
+    if not browser:
+        cleanup()
+        return
+
+    proc = subprocess.Popen([
+        browser, f"--app=http://127.0.0.1:{port}/",
+        "--class=syntax-startmenu", "--window-size=460,1040",
+        "--disable-extensions", "--no-first-run",
+    ])
+    proc.wait()
+    cleanup()
+
+
+if __name__ == "__main__":
+    main()

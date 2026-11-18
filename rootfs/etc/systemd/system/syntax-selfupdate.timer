@@ -1,0 +1,10 @@
+[Unit]
+Description=Syntax OS — vérification quotidienne des mises à jour
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=2h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

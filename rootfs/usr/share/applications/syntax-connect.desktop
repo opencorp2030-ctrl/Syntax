@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Syntax Connect
+GenericName=Accès à distance
+Comment=Écran, terminal et accès Internet de ce Pi
+Exec=xdg-open http://localhost/
+Icon=syntax
+Categories=System;Network;

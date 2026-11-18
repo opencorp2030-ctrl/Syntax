@@ -1,0 +1,13 @@
+#!/bin/sh
+# Menu d'alimentation du dock.
+pkill -x fuzzel
+mkdir -p "${XDG_CACHE_HOME:-$HOME/.cache}"
+CHOICE="$(printf 'Verrouiller\nFermer la session\nRedémarrer\nÉteindre\n' | \
+    fuzzel --config=/usr/share/syntax/desktop/fuzzel.ini --dmenu --lines=4 --width=26 \
+           --prompt='  ' --placeholder='')"
+case "$CHOICE" in
+    Verrouiller) exec swaylock -f -i /usr/share/syntax/wallpaper.jpg --scaling fill -c 101014 ;;
+    "Fermer la session") exec labwc --exit ;;
+    Redémarrer) exec systemctl reboot ;;
+    Éteindre) exec systemctl poweroff ;;
+esac

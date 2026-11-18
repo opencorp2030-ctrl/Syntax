@@ -1,0 +1,10 @@
+[Unit]
+Description=Syntax OS — mise à jour automatique
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/syntax/selfupdate.sh
+Nice=10
+IOSchedulingClass=idle

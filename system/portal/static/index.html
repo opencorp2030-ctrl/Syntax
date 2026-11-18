@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Syntax Connect</title>
+<link rel="icon" href="/static/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/vendor/xterm/xterm.css">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<main id="view-login" class="center" hidden>
+  <form id="login-form" class="card login" autocomplete="on">
+    <img src="/static/logo.svg" alt="" class="logo-lg">
+    <h1>Syntax Connect</h1>
+    <p class="muted" id="login-host">Connexion à ton Raspberry Pi</p>
+    <label>Identifiant
+      <input id="login-user" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+    </label>
+    <label>Mot de passe
+      <input id="login-pass" name="password" type="password" autocomplete="current-password" required>
+    </label>
+    <div id="login-change" hidden>
+      <p class="notice">Première connexion : remplace le mot de passe d'usine avant de continuer.</p>
+      <label>Nouveau mot de passe (10 caractères minimum)
+        <input id="login-new" type="password" autocomplete="new-password" minlength="10">
+      </label>
+      <label>Confirmer
+        <input id="login-new2" type="password" autocomplete="new-password" minlength="10">
+      </label>
+    </div>
+    <p class="error" id="login-error" role="alert"></p>
+    <button class="primary" type="submit">Se connecter</button>
+  </form>
+</main>
+
+<div id="view-app" hidden>
+  <header class="bar">
+    <div class="brand"><img src="/static/logo.svg" alt=""><span>Syntax</span><em id="bar-host"></em></div>
+    <nav id="tabs">
+      <button data-tab="home" class="on">Aperçu</button>
+      <button data-tab="screen">Écran</button>
+      <button data-tab="term">Terminal</button>
+      <button data-tab="net">Accès Internet</button>
+      <button data-tab="accounts">Comptes</button>
+    </nav>
+    <button id="logout" class="ghost">Déconnexion</button>
+  </header>
+
+  <section id="tab-home" class="page">
+    <div class="grid">
+      <div class="card stat"><h3>Processeur</h3><div class="big" id="s-cpu">–</div><div class="meter"><i id="m-cpu"></i></div><p class="muted" id="s-load"></p></div>
+      <div class="card stat"><h3>Température</h3><div class="big" id="s-temp">–</div><div class="meter"><i id="m-temp"></i></div><p class="muted">Processeur</p></div>
+      <div class="card stat"><h3>Mémoire</h3><div class="big" id="s-mem">–</div><div class="meter"><i id="m-mem"></i></div><p class="muted" id="s-mem2"></p></div>
+      <div class="card stat"><h3>Stockage</h3><div class="big" id="s-disk">–</div><div class="meter"><i id="m-disk"></i></div><p class="muted" id="s-disk2"></p></div>
+    </div>
+    <div class="grid two">
+      <div class="card">
+        <h3>Système</h3>
+        <dl id="s-info"></dl>
+      </div>
+      <div class="card">
+        <h3>Actions</h3>
+        <div class="row">
+          <button data-go="screen">Ouvrir l'écran</button>
+          <button data-go="term">Ouvrir un terminal</button>
+        </div>
+        <div class="row">
+          <button id="btn-reboot">Redémarrer</button>
+          <button id="btn-off" class="danger">Éteindre</button>
+        </div>
+        <h3 class="sep">Mot de passe</h3>
+        <form id="pw-form" class="inline">
+          <input type="password" id="pw-old" placeholder="Actuel" autocomplete="current-password" required>
+          <input type="password" id="pw-new" placeholder="Nouveau (10 car. min.)" autocomplete="new-password" minlength="10" required>
+          <button type="submit">Changer</button>
+        </form>
+        <p class="muted" id="pw-msg"></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-screen" class="page full" hidden>
+    <div class="toolbar">
+      <span id="screen-state" class="muted">Déconnecté</span>
+      <span class="grow"></span>
+      <button id="screen-cad" class="ghost">Ctrl+Alt+Suppr</button>
+      <button id="screen-paste" class="ghost">Coller le presse-papiers</button>
+      <button id="screen-full" class="ghost">Plein écran</button>
+      <button id="screen-reconnect" class="ghost">Reconnecter</button>
+    </div>
+    <div id="screen-box"><div id="screen-msg" class="muted"></div></div>
+  </section>
+
+  <section id="tab-term" class="page full" hidden>
+    <div class="toolbar">
+      <span id="term-state" class="muted">Déconnecté</span>
+      <span class="grow"></span>
+      <button id="term-new" class="ghost">Nouvelle session</button>
+    </div>
+    <div id="term-box"></div>
+  </section>
+
+  <section id="tab-net" class="page" hidden>
+    <div class="card">
+      <h3>Accès par Internet <span id="net-badge" class="badge">…</span></h3>
+      <p id="net-summary" class="muted"></p>
+      <div class="row" id="net-actions"></div>
+    </div>
+    <div class="grid two">
+      <div class="card">
+        <h3>Méthode 1 — Connexion Cloudflare (automatique)</h3>
+        <p class="muted">Syntax crée le tunnel et l'enregistrement DNS sur ton domaine. Gratuit, aucun port à ouvrir sur ta box.</p>
+        <ol class="steps">
+          <li><button id="cf-start">Obtenir le lien d'autorisation</button>
+            <p id="cf-link" class="muted"></p></li>
+          <li>Ouvre le lien, connecte-toi à Cloudflare et choisis ton domaine.<br><span id="cf-state" class="muted"></span></li>
+          <li>Choisis l'adresse de ton Pi :
+            <form id="cf-finish" class="inline">
+              <input id="cf-host" placeholder="syntax.mondomaine.fr" autocapitalize="none" spellcheck="false" required>
+              <button type="submit" class="primary">Activer</button>
+            </form></li>
+        </ol>
+        <p id="cf-msg" class="muted"></p>
+      </div>
+      <div class="card">
+        <h3>Méthode 2 — Jeton de tunnel</h3>
+        <p class="muted">Dans le tableau de bord Cloudflare : Zero Trust → Réseaux → Tunnels → Créer un tunnel (Cloudflared). Ajoute un nom d'hôte public pointant vers <code id="tok-target">http://localhost:80</code>, puis colle le jeton ici.</p>
+        <form id="tok-form">
+          <textarea id="tok" rows="3" placeholder="eyJhIjoi…" spellcheck="false" required></textarea>
+          <button type="submit" class="primary">Activer avec ce jeton</button>
+        </form>
+        <p id="tok-msg" class="muted"></p>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Sécurité</h3>
+      <p class="muted">Le tunnel ne démarre jamais tant qu'un compte utilise encore le mot de passe d'usine. Pour une protection supplémentaire, ajoute une règle <strong>Cloudflare Access</strong> (gratuit jusqu'à 50 utilisateurs) devant l'adresse de ton Pi : seules les adresses e-mail que tu autorises pourront atteindre cette page.</p>
+    </div>
+  </section>
+
+  <section id="tab-accounts" class="page" hidden>
+    <div class="card">
+      <h3>Comptes de cette machine</h3>
+      <p class="muted">Chaque compte a son propre mot de passe et sa propre session (terminal, fichiers). Un compte « administrateur » peut utiliser <code>sudo</code> et gérer les autres comptes.</p>
+      <div id="accounts-list" class="steps"></div>
+    </div>
+    <div class="card">
+      <h3>Ajouter un compte</h3>
+      <form id="account-form" class="inline">
+        <input id="acc-user" placeholder="identifiant" autocapitalize="none" spellcheck="false" pattern="[a-z][a-z0-9-]*" required>
+        <input id="acc-pass" type="password" placeholder="mot de passe (10 caractères min.)" minlength="10" required>
+        <label class="switch" style="margin:0 10px"><input type="checkbox" id="acc-admin" checked><span>Administrateur</span></label>
+        <button type="submit" class="primary">Créer</button>
+      </form>
+      <p class="muted" id="account-msg"></p>
+    </div>
+  </section>
+</div>
+
+<script src="/static/vendor/xterm/xterm.js"></script>
+<script src="/static/vendor/xterm/addon-fit.js"></script>
+<script type="module" src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+# Syntax OS — décoration des fenêtres (labwc)
+border.width: 1
+window.titlebar.padding.width: 10
+window.titlebar.padding.height: 7
+window.label.text.justify: center
+
+window.active.border.color: #3a3f44
+window.inactive.border.color: #26292c
+window.active.indicator.toggled-keybind.color: #ff7a45
+window.active.title.bg.color: #1c1f22
+window.inactive.title.bg.color: #17191b
+window.active.label.text.color: #f2f0ec
+window.inactive.label.text.color: #7a8086
+
+window.button.width: 26
+window.button.height: 22
+window.button.spacing: 4
+window.button.hover.bg.corner-radius: 11
+window.active.button.unpressed.image.color: #c7ccd1
+window.inactive.button.unpressed.image.color: #5c6268
+window.active.button.hover.bg.color: #f2f0ec22
+window.inactive.button.hover.bg.color: #f2f0ec18
+
+window.active.shadow.size: 16
+window.inactive.shadow.size: 8
+window.active.shadow.color: #00000060
+window.inactive.shadow.color: #00000030
+
+menu.overlap.x: 0
+menu.overlap.y: 0
+menu.width.min: 180
+menu.border.width: 1
+menu.border.color: #33383c
+menu.items.padding.x: 12
+menu.items.padding.y: 7
+menu.items.bg.color: #1c1f22
+menu.items.text.color: #f2f0ec
+menu.items.active.bg.color: #ff7a45
+menu.items.active.text.color: #15181a
+menu.separator.color: #33383c
+menu.title.bg.color: #1c1f22
+menu.title.text.color: #8b9097
+
+osd.bg.color: #1c1f22
+osd.border.color: #33383c
+osd.border.width: 1
+osd.label.text.color: #f2f0ec
+osd.window-switcher.padding: 10
+osd.window-switcher.item.padding.x: 12
+osd.window-switcher.item.padding.y: 8
+osd.window-switcher.item.active.border.width: 2
+osd.window-switcher.item.active.border.color: #ff7a45
+snapping.overlay.region.bg.color: #ff7a4540
+snapping.overlay.edge.bg.color: #ff7a4540

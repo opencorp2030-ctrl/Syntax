@@ -1,0 +1,82 @@
+/* Syntax OS — dock vertical */
+* {
+    font-family: "Inter", "FontAwesome", sans-serif;
+    font-size: 13px;
+    min-height: 0;
+    border: none;
+    box-shadow: none;
+    text-shadow: none;
+}
+window#waybar {
+    background: rgba(28, 31, 34, 0.86);
+    border: 1px solid rgba(242, 240, 236, 0.10);
+    border-radius: 22px;
+    color: #f2f0ec;
+}
+.modules-left { padding-top: 10px; }
+.modules-right { padding-bottom: 10px; }
+
+#image, #taskbar button, #custom-power, #pulseaudio, #clock, #custom-sep {
+    margin: 2px 8px;
+}
+#image {
+    padding: 6px;
+    border-radius: 14px;
+    transition: background 120ms;
+}
+#image:hover { background: rgba(242, 240, 236, 0.09); }
+#image.menu {
+    margin-bottom: 4px;
+}
+#custom-sep {
+    min-height: 1px;
+    margin: 6px 16px;
+    background: rgba(242, 240, 236, 0.12);
+    font-size: 1px;
+    color: transparent;
+}
+#taskbar { margin-top: 2px; }
+#taskbar button {
+    padding: 6px;
+    border-radius: 14px;
+    background: transparent;
+    border-right: 3px solid transparent;
+    transition: background 120ms;
+}
+#taskbar button:hover { background: rgba(242, 240, 236, 0.09); }
+#taskbar button.active {
+    background: rgba(255, 122, 69, 0.16);
+    border-right: 3px solid #ff7a45;
+}
+#tray { margin: 4px 0 6px; padding: 6px 0; }
+#tray > .passive { -gtk-icon-effect: dim; }
+#pulseaudio, #custom-power {
+    font-size: 17px;
+    padding: 8px 0;
+    border-radius: 14px;
+    color: #c7ccd1;
+}
+#pulseaudio:hover, #custom-power:hover { background: rgba(242, 240, 236, 0.09); color: #ffffff; }
+#pulseaudio.muted { color: #6c7278; }
+#custom-power:hover { color: #ff5c7a; }
+#clock {
+    font-family: "Space Grotesk", "Inter", sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 6px 0 4px;
+    color: #f2f0ec;
+}
+tooltip {
+    background: #1c1f22;
+    border: 1px solid #33383c;
+    border-radius: 10px;
+}
+tooltip label { color: #f2f0ec; padding: 2px 4px; }
+menu {
+    background: #1c1f22;
+    border: 1px solid #33383c;
+    border-radius: 10px;
+    padding: 4px;
+}
+menu menuitem { padding: 6px 10px; border-radius: 6px; color: #f2f0ec; }
+menu menuitem:hover { background: #ff7a45; }

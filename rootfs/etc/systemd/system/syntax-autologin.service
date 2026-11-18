@@ -1,0 +1,12 @@
+[Unit]
+Description=Syntax OS — connexion automatique si aucun écran n'est branché
+After=userconfig.service
+Before=lightdm.service
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/syntax/libexec/autologin-policy
+
+[Install]
+WantedBy=graphical.target

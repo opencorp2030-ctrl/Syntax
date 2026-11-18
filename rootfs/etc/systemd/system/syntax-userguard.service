@@ -1,0 +1,12 @@
+[Unit]
+Description=Syntax OS — choix du compte du premier démarrage
+After=cloud-config.service
+Before=userconfig.service
+ConditionPathExists=/boot/firmware/userconf.txt
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/syntax/libexec/user-guard
+
+[Install]
+WantedBy=multi-user.target

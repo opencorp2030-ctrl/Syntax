@@ -1,0 +1,242 @@
+#!/usr/bin/env python3
+"""Mise à jour de Syntax OS — même page web locale que Réglages Syntax, le menu
+Démarrer et Réglages du dock, à la place des fenêtres zenity séparées d'avant.
+"""
+import http.server
+import json
+import os
+import signal
+import socket
+import subprocess
+import sys
+import threading
+import urllib.parse
+
+LOCK_FILE = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "syntax-update-app.pid")
+
+
+def toggle_close_if_running():
+    try:
+        with open(LOCK_FILE, encoding="utf-8") as f:
+            pid = int(f.read().strip())
+        os.kill(pid, signal.SIGTERM)
+        os.remove(LOCK_FILE)
+        return True
+    except (OSError, ValueError):
+        try:
+            os.remove(LOCK_FILE)
+        except OSError:
+            pass
+        return False
+
+
+PAGE = """<!doctype html>
+<html><head><meta charset="utf-8"><title>Mise à jour Syntax</title>
+<link rel="stylesheet" href="http://localhost/static/style.css">
+<meta name="color-scheme" content="light">
+<style>
+:root{
+  --bg:#f3f1ec!important; --card:#ffffff!important; --text:#17191b!important; --muted:#6c6560!important;
+  --line:#ddd7cc!important; --accent:#e05a28!important; --accent-text:#ffffff!important;
+  --field:#ffffff!important; --shadow:0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06)!important;
+}
+html,body{margin:0;height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;height:100vh;padding:24px}
+.ua-bar{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.ua-bar h1{font-size:17px;margin:0}
+.ua-screen{flex:1;display:none;flex-direction:column;gap:14px}
+.ua-screen.on{display:flex}
+.ua-actions{display:flex;gap:8px;margin-top:auto}
+pre#log{flex:1;background:var(--field);border:1px solid var(--line);border-radius:12px;
+         padding:12px;font:12px ui-monospace,monospace;white-space:pre-wrap;overflow-y:auto;margin:0}
+.ua-spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);
+         border-top-color:var(--accent);animation:spin 0.8s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ua-status{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted)}
+</style></head>
+<body>
+  <div class="ua-bar">
+    <img src="/usr/share/syntax/logo.svg" style="width:26px;height:26px" onerror="this.style.display='none'">
+    <h1>Mise à jour Syntax</h1>
+  </div>
+
+  <div class="ua-screen on" id="confirm">
+    <p>Vérifier et installer les mises à jour maintenant ?</p>
+    <p class="muted">Paquets du système et fichiers Syntax OS. Peut prendre plusieurs minutes. Le Pi redémarre automatiquement à la fin.</p>
+    <div class="ua-actions">
+      <button class="primary" onclick="start()">Mettre à jour</button>
+      <button onclick="window.close()">Annuler</button>
+    </div>
+  </div>
+
+  <div class="ua-screen" id="progress">
+    <div class="ua-status"><span class="ua-spin"></span> Mise à jour en cours…</div>
+    <pre id="log"></pre>
+  </div>
+
+  <div class="ua-screen" id="done">
+    <div class="ua-status" id="done-status"></div>
+    <pre id="done-log"></pre>
+    <div class="ua-actions"><button class="primary" onclick="window.close()">Fermer</button></div>
+  </div>
+
+<script>
+function show(id){ document.querySelectorAll(".ua-screen").forEach(s => s.classList.toggle("on", s.id === id)); }
+
+function start(){
+  show("progress");
+  fetch("/start", {method:"POST"});
+  poll();
+}
+
+function poll(){
+  fetch("/status").then(r => r.json()).then(s => {
+    document.getElementById("log").textContent = s.log;
+    document.getElementById("log").scrollTop = 1e9;
+    if (s.state === "running") { setTimeout(poll, 700); return; }
+    show("done");
+    const st = document.getElementById("done-status");
+    if (s.state === "ok") {
+      st.textContent = "✓ Mise à jour terminée — le Pi va redémarrer dans quelques secondes.";
+    } else {
+      st.textContent = "✕ La mise à jour a échoué (ou l'autorisation a été refusée).";
+    }
+    document.getElementById("done-log").textContent = s.log.split("\\n").slice(-8).join("\\n");
+  });
+}
+document.addEventListener("keydown", e => { if (e.key === "Escape") window.close(); });
+</script>
+</body></html>
+"""
+
+
+class State:
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.state = "idle"
+        self.log = ""
+        self.proc = None
+
+
+class Handler(http.server.BaseHTTPRequestHandler):
+    def log_message(self, *a):
+        pass
+
+    def do_GET(self):
+        if self.path == "/":
+            self._page()
+        elif self.path == "/status":
+            self._status()
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+    def do_POST(self):
+        if self.path == "/start":
+            self._start()
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+    def _page(self):
+        body = PAGE.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _status(self):
+        st = self.server.state
+        with st.lock:
+            payload = {"state": st.state, "log": st.log}
+        body = json.dumps(payload).encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _start(self):
+        st = self.server.state
+        with st.lock:
+            if st.state == "running":
+                self.send_response(204)
+                self.end_headers()
+                return
+            st.state = "running"
+            st.log = ""
+        threading.Thread(target=run_update, args=(st,), daemon=True).start()
+        self.send_response(204)
+        self.end_headers()
+
+
+def run_update(st):
+    try:
+        proc = subprocess.Popen(
+            ["pkexec", "/usr/lib/syntax/selfupdate.sh"],
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+        )
+    except OSError:
+        with st.lock:
+            st.state = "error"
+            st.log = "Impossible de lancer la mise à jour."
+        return
+    for line in proc.stdout:
+        with st.lock:
+            st.log += line
+    rc = proc.wait()
+    with st.lock:
+        st.state = "ok" if rc == 0 else "error"
+
+
+def free_port():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(("127.0.0.1", 0))
+    port = s.getsockname()[1]
+    s.close()
+    return port
+
+
+def main():
+    if toggle_close_if_running():
+        return
+    os.makedirs(os.path.dirname(LOCK_FILE), exist_ok=True)
+    with open(LOCK_FILE, "w", encoding="utf-8") as f:
+        f.write(str(os.getpid()))
+
+    def cleanup(*_a):
+        try:
+            os.remove(LOCK_FILE)
+        except OSError:
+            pass
+        sys.exit(0)
+
+    signal.signal(signal.SIGTERM, cleanup)
+    signal.signal(signal.SIGINT, cleanup)
+
+    port = free_port()
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    server.state = State()
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+
+    browser = None
+    for b in ("google-chrome", "chromium", "chromium-browser"):
+        if subprocess.run(["sh", "-c", f"command -v {b}"], capture_output=True).returncode == 0:
+            browser = b
+            break
+    if not browser:
+        cleanup()
+        return
+
+    proc = subprocess.Popen([
+        browser, f"--app=http://127.0.0.1:{port}/",
+        "--class=syntax-update-app", "--window-size=520,460",
+        "--disable-extensions", "--no-first-run",
+    ])
+    proc.wait()
+    cleanup()
+
+
+if __name__ == "__main__":
+    main()

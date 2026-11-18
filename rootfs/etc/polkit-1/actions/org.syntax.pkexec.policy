@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD polkit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/polkit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>Syntax OS</vendor>
+
+  <action id="org.syntax.dockapply">
+    <description>Appliquer la configuration du dock Syntax</description>
+    <message>Authentification nécessaire pour changer le dock</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/syntax/libexec/dock-apply</annotate>
+  </action>
+
+  <action id="org.syntax.selfupdate">
+    <description>Mettre à jour Syntax OS</description>
+    <message>Authentification nécessaire pour mettre à jour le système</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/syntax/selfupdate.sh</annotate>
+  </action>
+
+  <action id="org.syntax.settingsapply">
+    <description>Appliquer un réglage Syntax OS</description>
+    <message>Authentification nécessaire pour changer ce réglage</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/syntax/libexec/syntax-settings-apply</annotate>
+  </action>
+</policyconfig>

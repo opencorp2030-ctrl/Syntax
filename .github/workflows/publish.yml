@@ -1,0 +1,43 @@
+name: publish-image
+# Publie dans une release l'image déjà construite par un run de build-image.
+on:
+  push:
+    branches: ['claude/**', 'main']
+    paths: ['.github/workflows/publish.yml']
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Identifiant du run build-image dont publier l'image
+        required: true
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  DEFAULT_RUN_ID: '43928378881'
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ inputs.run_id || env.DEFAULT_RUN_ID }}
+          github-token: ${{ github.token }}
+          path: dl
+          merge-multiple: true
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd dl
+          ls -l
+          sha256sum -c syntax-os-*.img.xz.sha256
+          TAG="v$(cat ../VERSION)"
+          gh release delete "$TAG" --cleanup-tag -y -R "$GITHUB_REPOSITORY" 2>/dev/null || true
+          SHOTS=(); for f in bureau*.png; do [ -f "$f" ] && SHOTS+=("$f"); done
+          UPDATE=(); for f in syntax-update-*.tar.gz syntax-update-*.tar.gz.sha256; do [ -f "$f" ] && UPDATE+=("$f"); done
+          gh release create "$TAG" syntax-os-*.img.xz syntax-os-*.img.xz.sha256 "${SHOTS[@]}" "${UPDATE[@]}" -R "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" --title "Syntax OS $(cat ../VERSION)" --notes-file ../build/RELEASE_NOTES.md

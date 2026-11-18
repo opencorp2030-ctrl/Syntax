@@ -1,0 +1,360 @@
+#!/usr/bin/env python3
+"""Réglages Syntax — clavier, fond d'écran, comptes, mise à jour, dock, diagnostic
+Bluetooth, à propos. Une page web locale (même langage visuel que Syntax Connect),
+affichée dans une fenêtre dédiée plutôt qu'un panneau générique.
+
+Les réglages avancés et spécifiques au matériel (overclock, caméra, GPIO…) restent
+accessibles via « Configuration Raspberry Pi (avancé) » dans le lanceur — on ne les
+duplique pas ici.
+"""
+import html
+import http.server
+import json
+import os
+import signal
+import socket
+import subprocess
+import sys
+import threading
+import urllib.parse
+
+WALLPAPER_DIR = "/usr/share/syntax/wallpapers"
+LOCK_FILE = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "syntax-settings.pid")
+
+KEYBOARDS = [("fr", "Français (AZERTY)"), ("gb", "Anglais (QWERTY)"), ("ch", "Suisse"), ("be", "Belge")]
+
+
+def toggle_close_if_running():
+    try:
+        with open(LOCK_FILE, encoding="utf-8") as f:
+            pid = int(f.read().strip())
+        os.kill(pid, signal.SIGTERM)
+        os.remove(LOCK_FILE)
+        return True
+    except (OSError, ValueError):
+        try:
+            os.remove(LOCK_FILE)
+        except OSError:
+            pass
+        return False
+
+
+def list_wallpapers():
+    try:
+        return sorted(f for f in os.listdir(WALLPAPER_DIR) if f.lower().endswith((".jpg", ".jpeg", ".png")))
+    except OSError:
+        return []
+
+
+def run_privileged(action, arg):
+    return subprocess.run(
+        ["pkexec", "/usr/lib/syntax/libexec/syntax-settings-apply", action, arg],
+        capture_output=True, text=True,
+    )
+
+
+def bluetooth_diagnostic():
+    out = []
+    out.append("=== systemctl status bluetooth ===")
+    out.append(subprocess.run(["systemctl", "status", "bluetooth", "--no-pager"],
+                               capture_output=True, text=True).stdout)
+    devices = subprocess.run(["bluetoothctl", "devices"], capture_output=True, text=True).stdout
+    out.append("=== bluetoothctl devices ===")
+    out.append(devices)
+    for line in devices.splitlines():
+        parts = line.split()
+        if len(parts) >= 2:
+            mac = parts[1]
+            out.append(f"=== bluetoothctl info {mac} ===")
+            out.append(subprocess.run(["bluetoothctl", "info", mac], capture_output=True, text=True).stdout)
+    out.append("=== journalctl -u bluetooth (lignes HID/input) ===")
+    j = subprocess.run(["journalctl", "-u", "bluetooth", "--no-pager", "-n", "300"],
+                        capture_output=True, text=True).stdout
+    out.append("\n".join(l for l in j.splitlines() if any(k in l.lower() for k in ("hid", "input", "hog")))[-4000:])
+    return "\n".join(out)
+
+
+PAGE = """<!doctype html>
+<html><head><meta charset="utf-8"><title>Réglages Syntax</title>
+<link rel="stylesheet" href="http://localhost/static/style.css">
+<meta name="color-scheme" content="light">
+<style>
+/* Toujours clair ici, quel que soit le thème sombre du reste du système — demandé
+   explicitement : « moins sombre ». */
+:root{
+  --bg:#f3f1ec!important; --card:#ffffff!important; --text:#17191b!important; --muted:#6c6560!important;
+  --line:#ddd7cc!important; --accent:#e05a28!important; --accent-text:#ffffff!important;
+  --field:#ffffff!important; --shadow:0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06)!important;
+}
+html,body{margin:0;height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;height:100vh}
+.rs-bar{display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.rs-bar h1{font-size:17px;margin:0}
+.rs-body{flex:1;overflow-y:auto;padding:18px 20px 28px;display:grid;gap:16px;max-width:560px;align-content:start}
+.rs-nav{display:flex;gap:4px;flex-wrap:wrap;background:color-mix(in srgb, var(--muted) 12%, transparent);
+        padding:4px;border-radius:980px;margin:0 20px 4px}
+.rs-nav button{flex:1;padding:7px 10px;font-size:12.5px;background:transparent}
+.rs-nav button.on{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.12);opacity:1}
+.rs-panel{display:none}
+.rs-panel.on{display:grid;gap:14px;align-content:start}
+.rs-kbd,.rs-wall{border-radius:var(--radius)}
+.rs-wall-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.rs-wall{border-radius:12px;overflow:hidden;cursor:pointer;border:2px solid transparent;aspect-ratio:16/10;
+         background-size:cover;background-position:center}
+.rs-wall.current{border-color:var(--accent)}
+.rs-kbd-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.rs-kbd{text-align:left;padding:12px 14px}
+.rs-kbd.current{background:var(--accent);color:var(--accent-text)}
+.rs-msg{font-size:13px;color:var(--ok);min-height:16px}
+pre{background:var(--field);border:1px solid var(--line);border-radius:12px;padding:12px;
+    font:12px ui-monospace,monospace;white-space:pre-wrap;max-height:300px;overflow:auto}
+</style></head>
+<body>
+  <div class="rs-bar">
+    <img src="/usr/share/syntax/logo.svg" style="width:26px;height:26px" onerror="this.style.display='none'">
+    <h1>Réglages Syntax</h1>
+  </div>
+  <div class="rs-nav" id="nav"></div>
+  <div class="rs-body">
+    <div class="rs-panel" data-panel="clavier">
+      <h3>Disposition du clavier</h3>
+      <div class="rs-kbd-grid" id="kbd-grid"></div>
+      <div class="rs-msg" id="kbd-msg"></div>
+    </div>
+    <div class="rs-panel" data-panel="fond">
+      <h3>Fond d'écran</h3>
+      <div class="rs-wall-grid" id="wall-grid"></div>
+      <div class="rs-msg" id="wall-msg"></div>
+    </div>
+    <div class="rs-panel" data-panel="divers">
+      <h3>Divers</h3>
+      <p class="muted">Comptes, mise à jour et dock s'ouvrent dans leurs propres fenêtres.</p>
+      <div class="row">
+        <button class="primary" onclick="openUrl('http://localhost/')">Comptes (Syntax Connect)</button>
+        <button onclick="runCmd('/usr/share/syntax/desktop/bin/update-app')">Mise à jour</button>
+        <button onclick="runCmd('/usr/share/syntax/desktop/bin/dock-settings')">Réglages du dock</button>
+      </div>
+    </div>
+    <div class="rs-panel" data-panel="bluetooth">
+      <h3>Diagnostic Bluetooth</h3>
+      <p class="muted">État du service, appareils appairés et lignes liées au HID. Copié dans le presse-papiers.</p>
+      <button class="primary" onclick="runDiag()" id="diag-btn">Lancer le diagnostic</button>
+      <pre id="diag-out" hidden></pre>
+    </div>
+    <div class="rs-panel" data-panel="apropos">
+      <h3>À propos</h3>
+      <p>Syntax OS __VERSION__</p>
+      <p><a href="https://github.com/opencorp2030-ctrl/Syntax" class="muted">github.com/opencorp2030-ctrl/Syntax</a></p>
+    </div>
+  </div>
+<script>
+const KEYBOARDS = __KEYBOARDS_JSON__;
+const CURRENT_KBD = __CURRENT_KBD_JSON__;
+const WALLPAPERS = __WALLPAPERS_JSON__;
+const TABS = [["clavier","Clavier"],["fond","Fond d'écran"],["divers","Divers"],["bluetooth","Bluetooth"],["apropos","À propos"]];
+
+const nav = document.getElementById("nav");
+TABS.forEach(([id, label], i) => {
+  const b = document.createElement("button");
+  b.textContent = label;
+  b.onclick = () => showPanel(id);
+  b.dataset.id = id;
+  if (i === 0) b.classList.add("on");
+  nav.appendChild(b);
+});
+function showPanel(id){
+  document.querySelectorAll(".rs-panel").forEach(p => p.classList.toggle("on", p.dataset.panel === id));
+  document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("on", b.dataset.id === id));
+}
+showPanel(new URLSearchParams(location.search).get("tab") || "clavier");
+
+const kbdGrid = document.getElementById("kbd-grid");
+KEYBOARDS.forEach(([code, name]) => {
+  const b = document.createElement("button");
+  b.className = "rs-kbd" + (code === CURRENT_KBD ? " current" : "");
+  b.textContent = name;
+  b.onclick = () => {
+    document.getElementById("kbd-msg").textContent = "Application…";
+    fetch("/apply?action=keyboard&arg=" + code).then(r => r.json()).then(r => {
+      document.getElementById("kbd-msg").textContent = r.ok ? "Clavier appliqué." : "Échec : " + r.error;
+    });
+  };
+  kbdGrid.appendChild(b);
+});
+
+const wallGrid = document.getElementById("wall-grid");
+WALLPAPERS.forEach(name => {
+  const d = document.createElement("div");
+  d.className = "rs-wall";
+  d.style.backgroundImage = `url(/wallpaper?name=${encodeURIComponent(name)})`;
+  d.onclick = () => {
+    document.getElementById("wall-msg").textContent = "Application…";
+    fetch("/apply?action=wallpaper&arg=" + encodeURIComponent(name)).then(r => r.json()).then(r => {
+      document.getElementById("wall-msg").textContent = r.ok ? "Fond d'écran appliqué." : "Échec : " + r.error;
+      document.querySelectorAll(".rs-wall").forEach(w => w.classList.remove("current"));
+      if (r.ok) d.classList.add("current");
+    });
+  };
+  wallGrid.appendChild(d);
+});
+
+function runCmd(cmd){ fetch("/run?cmd=" + encodeURIComponent(cmd)); }
+function openUrl(u){ fetch("/open?url=" + encodeURIComponent(u)); }
+function runDiag(){
+  const btn = document.getElementById("diag-btn"), out = document.getElementById("diag-out");
+  btn.disabled = true; btn.textContent = "Diagnostic en cours…";
+  fetch("/diag").then(r => r.text()).then(t => {
+    out.textContent = t; out.hidden = false;
+    btn.disabled = false; btn.textContent = "Relancer (et recopier)";
+  });
+}
+document.addEventListener("keydown", e => { if (e.key === "Escape") window.close(); });
+</script>
+</body></html>
+"""
+
+
+class Handler(http.server.BaseHTTPRequestHandler):
+    def log_message(self, *a):
+        pass
+
+    def _json(self, obj, code=200):
+        body = json.dumps(obj).encode("utf-8")
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_GET(self):
+        parsed = urllib.parse.urlparse(self.path)
+        q = urllib.parse.parse_qs(parsed.query)
+        if parsed.path == "/":
+            self._page()
+        elif parsed.path == "/wallpaper":
+            self._wallpaper(q.get("name", [""])[0])
+        elif parsed.path == "/apply":
+            self._apply(q.get("action", [""])[0], q.get("arg", [""])[0])
+        elif parsed.path == "/run":
+            subprocess.Popen(["sh", "-c", q.get("cmd", [""])[0]], start_new_session=True)
+            self._json({"ok": True})
+        elif parsed.path == "/open":
+            subprocess.Popen(["xdg-open", q.get("url", ["http://localhost/"])[0]], start_new_session=True)
+            self._json({"ok": True})
+        elif parsed.path == "/diag":
+            text = bluetooth_diagnostic()
+            try:
+                p = subprocess.run(["wl-copy"], input=text, text=True)
+            except FileNotFoundError:
+                pass
+            body = text.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+    def _page(self):
+        try:
+            with open("/etc/default/keyboard", encoding="utf-8") as f:
+                content = f.read()
+            current = next((l.split("=", 1)[1].strip().strip('"') for l in content.splitlines()
+                             if l.startswith("XKBLAYOUT=")), "fr")
+        except OSError:
+            current = "fr"
+        version = "inconnue"
+        try:
+            with open("/usr/lib/syntax/version", encoding="utf-8") as f:
+                version = f.read().strip()
+        except OSError:
+            pass
+        page = (PAGE
+                .replace("__KEYBOARDS_JSON__", json.dumps(KEYBOARDS))
+                .replace("__CURRENT_KBD_JSON__", json.dumps(current))
+                .replace("__WALLPAPERS_JSON__", json.dumps(list_wallpapers()))
+                .replace("__VERSION__", html.escape(version)))
+        body = page.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _wallpaper(self, name):
+        path = os.path.join(WALLPAPER_DIR, name)
+        if not name or "/" in name or not os.path.isfile(path):
+            self.send_response(404)
+            self.end_headers()
+            return
+        with open(path, "rb") as f:
+            data = f.read()
+        self.send_response(200)
+        self.send_header("Content-Type", "image/jpeg")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def _apply(self, action, arg):
+        if action == "wallpaper":
+            arg = os.path.join(WALLPAPER_DIR, arg)
+        result = run_privileged(action, arg)
+        if result.returncode == 0:
+            self._json({"ok": True})
+        else:
+            self._json({"ok": False, "error": (result.stderr or "échec").strip()[:200]})
+
+
+def free_port():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(("127.0.0.1", 0))
+    port = s.getsockname()[1]
+    s.close()
+    return port
+
+
+def main():
+    if toggle_close_if_running():
+        return
+    os.makedirs(os.path.dirname(LOCK_FILE), exist_ok=True)
+    with open(LOCK_FILE, "w", encoding="utf-8") as f:
+        f.write(str(os.getpid()))
+
+    def cleanup(*_a):
+        try:
+            os.remove(LOCK_FILE)
+        except OSError:
+            pass
+        sys.exit(0)
+
+    signal.signal(signal.SIGTERM, cleanup)
+    signal.signal(signal.SIGINT, cleanup)
+
+    port = free_port()
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+
+    browser = None
+    for b in ("google-chrome", "chromium", "chromium-browser"):
+        if subprocess.run(["sh", "-c", f"command -v {b}"], capture_output=True).returncode == 0:
+            browser = b
+            break
+    if not browser:
+        cleanup()
+        return
+
+    tab = sys.argv[1] if len(sys.argv) > 1 else ""
+    url = f"http://127.0.0.1:{port}/" + (f"?tab={tab}" if tab else "")
+    proc = subprocess.Popen([
+        browser, f"--app={url}",
+        "--class=syntax-settings", "--window-size=620,720",
+        "--disable-extensions", "--no-first-run",
+    ])
+    proc.wait()
+    cleanup()
+
+
+if __name__ == "__main__":
+    main()

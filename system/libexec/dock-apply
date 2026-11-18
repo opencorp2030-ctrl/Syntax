@@ -1,0 +1,16 @@
+#!/bin/sh
+# Appelé via pkexec par desktop/bin/dock-settings : installe la nouvelle configuration
+# du dock et relance le dock pour l'appliquer tout de suite.
+set -e
+[ "$(id -u)" -eq 0 ] || { echo "Doit être lancé en root (pkexec)." >&2; exit 1; }
+SRC="$1"
+[ -n "$SRC" ] && [ -f "$SRC" ] || { echo "Fichier de configuration introuvable." >&2; exit 1; }
+python3 -c "import json,sys; json.load(open(sys.argv[1], encoding='utf-8'))" "$SRC" \
+    || { echo "Configuration invalide, abandon." >&2; exit 1; }
+install -m 644 "$SRC" /etc/syntax-dock.json
+python3 /usr/lib/syntax/desktop/make-dock.py /usr/share/syntax/desktop/waybar.json
+for u in /run/user/*; do
+    uid="${u##*/}"
+    sudo -u "#$uid" env XDG_RUNTIME_DIR="$u" pkill -x waybar 2>/dev/null || true
+done
+exit 0

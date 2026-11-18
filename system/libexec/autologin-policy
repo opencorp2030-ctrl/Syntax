@@ -1,0 +1,38 @@
+#!/bin/sh
+# Décide, à chaque démarrage, si lightdm doit ouvrir une session automatiquement ou
+# afficher l'écran de connexion Syntax (comptes avec photo, un clic, mot de passe —
+# comme sur Windows) :
+#   - aucun vrai moniteur branché : connexion automatique, indispensable pour qu'un
+#     Pi sans écran ni clavier reste joignable par Syntax Connect sans que personne
+#     n'ait jamais pu taper de mot de passe dessus ;
+#   - un moniteur est branché : écran de connexion Syntax, pour choisir son compte.
+# « Changer d'utilisateur » (dm-tool switch-to-greeter) fonctionne dans tous les cas,
+# indépendamment de ce réglage.
+set -e
+CONF=/etc/lightdm/lightdm.conf.d/90-syntax-autologin.conf
+mkdir -p /etc/lightdm/lightdm.conf.d
+
+has_real_display() {
+    for s in /sys/class/drm/card*-*/status; do
+        [ -f "$s" ] || continue
+        [ "$(cat "$s" 2>/dev/null)" = "connected" ] && return 0
+    done
+    return 1
+}
+
+if has_real_display; then
+    rm -f "$CONF"
+    exit 0
+fi
+
+FIRST="$(getent passwd 1000 | cut -d: -f1)"
+if [ -z "$FIRST" ]; then
+    rm -f "$CONF"
+    exit 0
+fi
+
+cat > "$CONF" <<CONF2
+[Seat:*]
+autologin-user=$FIRST
+autologin-user-timeout=0
+CONF2

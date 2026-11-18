@@ -1,0 +1,13 @@
+[Unit]
+Description=Syntax OS — application de /boot/firmware/syntax.conf
+After=NetworkManager.service userconfig.service
+Wants=NetworkManager.service
+ConditionPathExists=/boot/firmware/syntax.conf
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/syntax apply-boot-config
+TimeoutStartSec=120
+
+[Install]
+WantedBy=multi-user.target

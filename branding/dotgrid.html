@@ -1,0 +1,27 @@
+<!doctype html><html><head><style>
+html,body{margin:0;width:3840px;height:2160px;overflow:hidden;background:#07090c}
+svg{position:absolute;inset:0}
+</style></head><body>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3840 2160" width="3840" height="2160">
+<defs>
+ <radialGradient id="glow1" cx=".5" cy=".5" r=".5">
+   <stop offset="0" stop-color="#ff7a45" stop-opacity=".55"/>
+   <stop offset="1" stop-color="#ff7a45" stop-opacity="0"/>
+ </radialGradient>
+ <radialGradient id="glow2" cx=".5" cy=".5" r=".5">
+   <stop offset="0" stop-color="#2dd4bf" stop-opacity=".45"/>
+   <stop offset="1" stop-color="#2dd4bf" stop-opacity="0"/>
+ </radialGradient>
+ <filter id="blur1" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="120"/></filter>
+ <pattern id="dots" width="56" height="56" patternUnits="userSpaceOnUse">
+   <circle cx="2" cy="2" r="2.4" fill="#ffffff" opacity=".10"/>
+ </pattern>
+ <radialGradient id="vig" cx=".5" cy=".46" r=".85"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".65"/></radialGradient>
+ <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#090b0e"/><stop offset="1" stop-color="#0c0f10"/></linearGradient>
+</defs>
+<rect width="3840" height="2160" fill="url(#bg)"/>
+<ellipse cx="1180" cy="760" rx="900" ry="700" fill="url(#glow1)" filter="url(#blur1)"/>
+<ellipse cx="2850" cy="1500" rx="1000" ry="760" fill="url(#glow2)" filter="url(#blur1)"/>
+<rect width="3840" height="2160" fill="url(#dots)"/>
+<rect width="3840" height="2160" fill="url(#vig)"/>
+</svg></body></html>

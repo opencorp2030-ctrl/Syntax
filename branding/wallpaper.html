@@ -1,0 +1,26 @@
+<!doctype html><html><head><style>
+html,body{margin:0;width:3840px;height:2160px;overflow:hidden;background:#05060a}
+svg{position:absolute;inset:0}
+</style></head><body>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3840 2160" width="3840" height="2160">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#07080d"/><stop offset="1" stop-color="#0a0c14"/></linearGradient>
+ <filter id="b1" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="140"/></filter>
+ <filter id="b2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="60"/></filter>
+ <filter id="b3" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="14"/></filter>
+ <linearGradient id="r1" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3a2bd6"/><stop offset=".5" stop-color="#2f6bff"/><stop offset="1" stop-color="#19c8f0"/></linearGradient>
+ <linearGradient id="r2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7b3cff"/><stop offset=".55" stop-color="#4b5dff"/><stop offset="1" stop-color="#22d3ee"/></linearGradient>
+ <linearGradient id="r3" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b68cff" stop-opacity="0"/><stop offset=".35" stop-color="#c9b3ff"/><stop offset=".7" stop-color="#8fe3ff"/><stop offset="1" stop-color="#8fe3ff" stop-opacity="0"/></linearGradient>
+ <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="7"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .05 0"/></filter>
+ <radialGradient id="vig" cx=".5" cy=".5" r=".75"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient>
+</defs>
+<rect width="3840" height="2160" fill="url(#bg)"/>
+<g transform="rotate(-14 1920 1080)">
+ <path filter="url(#b1)" opacity=".85" fill="url(#r1)" d="M-600 1500 C 500 900, 1300 1800, 2200 1250 S 3700 700, 4600 1150 L 4600 1650 C 3700 1250, 3000 1900, 2200 1800 S 500 1500, -600 2050 Z"/>
+ <path filter="url(#b2)" opacity=".9" fill="url(#r2)" d="M-600 1420 C 500 860, 1300 1700, 2200 1180 S 3700 640, 4600 1080 L 4600 1250 C 3700 860, 3000 1500, 2200 1420 S 500 1180, -600 1640 Z"/>
+ <path filter="url(#b3)" opacity=".75" fill="none" stroke="url(#r3)" stroke-width="10" d="M-600 1400 C 500 840, 1300 1680, 2200 1160 S 3700 620, 4600 1060"/>
+ <path filter="url(#b3)" opacity=".35" fill="none" stroke="url(#r3)" stroke-width="5" d="M-600 1560 C 500 1040, 1300 1820, 2200 1330 S 3700 800, 4600 1220"/>
+</g>
+<rect width="3840" height="2160" filter="url(#grain)"/>
+<rect width="3840" height="2160" fill="url(#vig)"/>
+</svg></body></html>
